@@ -1,0 +1,10 @@
+latitude,longitude,data_pas,satelite,pais,estado,municipio,bioma,numero_dias_sem_chuva,precipitacao,risco_fogo,id_area_industrial,frp
+ -16.174000, -52.365000,2003-09-09 01:36:33,ATSR,Brasil,GOIÁS,BALIZA,Cerrado,,,,0,
+ -16.976000, -50.593000,2003-09-12 01:41:53,ATSR,Brasil,GOIÁS,PARAÚNA,Cerrado,,,,0,
+ -15.009000, -51.057000,2003-09-25 01:33:55,ATSR,Brasil,GOIÁS,ARUANÃ,Cerrado,,,,0,
+  -4.185000, -46.993330,2003-10-06 05:03:57,NOAA-16N,Brasil,MARANHÃO,BOM JARDIM,Amazônia,,,,0,
+ -19.505000, -57.558330,2003-10-08 08:13:07,NOAA-12D,Brasil,MATO GROSSO DO SUL,CORUMBÁ,Pantanal,,,,0,
+ -13.366670, -45.708330,2003-10-09 06:13:48,NOAA-12D,Brasil,BAHIA,CORRENTINA,Cerrado,,,,0,
+  -4.110000, -48.023330,2003-11-23 09:31:53,NOAA-12D,Brasil,PARÁ,DOM ELISEU,Amazônia,,,,0,
+   1.170000, -50.438330,2003-12-01 07:54:03,NOAA-12D,Brasil,AMAPÁ,CUTIAS,Amazônia,,,,0,
+  -1.233000, -48.321000,2003-07-20 04:36:00,AQUA_M-M,Brasil,PARÁ,SANTA BÁRBARA DO PARÁ,Amazônia,,,,0,

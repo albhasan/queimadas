@@ -1,0 +1,10 @@
+latitude,longitude,data_pas,satelite,pais,estado,municipio,bioma,numero_dias_sem_chuva,precipitacao,risco_fogo,id_area_industrial,frp
+ -15.080000, -49.720000,2004-08-18 06:16:14,NOAA-12D,Brasil,GOIÁS,RUBIATABA,Cerrado,,,,0,
+ -21.440000, -54.470000,2004-08-31 07:33:57,NOAA-12D,Brasil,MATO GROSSO DO SUL,NOVA ALVORADA DO SUL,Cerrado,,,,0,
+ -12.577700, -55.047200,2004-05-04 01:57:23,ATSR,Brasil,MATO GROSSO,FELIZ NATAL,Amazônia,,,,0,
+ -11.068330, -41.005000,2004-09-27 18:56:09,NOAA-12,Brasil,BAHIA,VÁRZEA NOVA,Caatinga,,,,0,
+  -2.680000, -49.088330,2004-11-08 17:26:15,NOAA-16,Brasil,PARÁ,MOJU,Amazônia,,,,0,
+ -15.825000, -51.388330,2004-08-15 09:05:25,NOAA-12D,Brasil,GOIÁS,JUSSARA,Cerrado,,,,0,
+  -3.560000, -51.323330,2004-09-29 04:06:43,NOAA-16N,Brasil,PARÁ,ANAPU,Amazônia,,,,0,
+ -13.428330, -56.516670,2004-10-07 05:56:14,NOAA-16N,Brasil,MATO GROSSO,NOVA MUTUM,Cerrado,,,,0,
+ -19.993330, -47.708330,2004-10-09 08:14:56,NOAA-12D,Brasil,SÃO PAULO,IGARAPAVA,Cerrado,,,,0,

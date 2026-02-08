@@ -1,0 +1,10 @@
+latitude,longitude,data_pas,satelite,pais,estado,municipio,bioma,numero_dias_sem_chuva,precipitacao,risco_fogo,id_area_industrial,frp
+  -11.415200 ,  -56.389099 ,2022-05-13 01:34:50,METOP-B,Brasil,MATO GROSSO,TABAPORÃ,Amazônia, 14 ,5.1,0.1, 0 ,
+  -11.413200 ,  -56.380798 ,2022-05-13 01:34:50,METOP-B,Brasil,MATO GROSSO,TABAPORÃ,Amazônia, 15 ,5.7,0.1, 0 ,
+  -11.432700 ,  -56.375999 ,2022-05-13 01:34:49,METOP-B,Brasil,MATO GROSSO,TABAPORÃ,Amazônia, 15 ,4.9,0.1, 0 ,
+  -11.762300 ,  -56.591202 ,2022-05-13 01:34:45,METOP-B,Brasil,MATO GROSSO,PORTO DOS GAÚCHOS,Amazônia, 20 ,0.9,0.2, 0 ,
+  -11.772000 ,  -56.588902 ,2022-05-13 01:34:45,METOP-B,Brasil,MATO GROSSO,PORTO DOS GAÚCHOS,Amazônia, 20 ,0.9,0.2, 0 ,
+  -11.830700 ,  -56.574699 ,2022-05-13 01:34:44,METOP-B,Brasil,MATO GROSSO,PORTO DOS GAÚCHOS,Amazônia, 21 ,0.8,1, 0 ,
+  -11.828800 ,  -56.566601 ,2022-05-13 01:34:44,METOP-B,Brasil,MATO GROSSO,PORTO DOS GAÚCHOS,Amazônia, 22 ,0.9,0.7, 0 ,
+  -11.826900 ,  -56.558498 ,2022-05-13 01:34:44,METOP-B,Brasil,MATO GROSSO,PORTO DOS GAÚCHOS,Amazônia, 23 ,0.9,0.2, 0 ,
+  -11.618000 ,  -55.029800 ,2022-05-13 01:34:41,METOP-B,Brasil,MATO GROSSO,CLÁUDIA,Amazônia, 17 ,0.3,0.3, 0 ,

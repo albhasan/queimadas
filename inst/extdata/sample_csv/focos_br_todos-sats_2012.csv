@@ -1,0 +1,10 @@
+latitude,longitude,data_pas,satelite,pais,estado,municipio,bioma,numero_dias_sem_chuva,precipitacao,risco_fogo,id_area_industrial,frp
+ -21.179350, -44.273160,2012-02-02 04:10:00,NPP-375D,Brasil,MINAS GERAIS,SÃO JOÃO DEL REI,Mata Atlântica,,,,0,
+   2.489250, -60.496390,2012-02-13 05:38:00,NPP-375D,Brasil,RORAIMA,CANTÁ,Amazônia,,,,0,
+  -8.432980, -35.824200,2012-02-13 04:00:00,NPP-375D,Brasil,PERNAMBUCO,SÃO JOAQUIM DO MONTE,Mata Atlântica,,,,0,
+ -11.848960, -37.636150,2012-02-13 04:01:00,NPP-375D,Brasil,BAHIA,CONDE,Mata Atlântica,,,,0,
+ -18.039330, -39.926730,2012-02-13 04:03:00,NPP-375D,Brasil,BAHIA,MUCURI,Mata Atlântica,,,,0,
+ -17.644310, -47.146520,2012-02-27 04:41:00,NPP-375D,Brasil,MINAS GERAIS,GUARDA-MOR,Cerrado,,,,0,
+ -11.562150, -45.665290,2012-02-27 04:39:00,NPP-375D,Brasil,BAHIA,RIACHÃO DAS NEVES,Cerrado,,,,0,
+ -22.089730, -54.927150,2012-03-12 05:20:00,NPP-375D,Brasil,MATO GROSSO DO SUL,ITAPORÃ,Mata Atlântica,,,,0,
+ -19.511540, -56.678290,2012-03-12 05:19:00,NPP-375D,Brasil,MATO GROSSO DO SUL,CORUMBÁ,Pantanal,,,,0,

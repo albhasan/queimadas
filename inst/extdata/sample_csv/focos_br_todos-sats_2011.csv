@@ -1,0 +1,10 @@
+latitude,longitude,data_pas,satelite,pais,estado,municipio,bioma,numero_dias_sem_chuva,precipitacao,risco_fogo,id_area_industrial,frp
+  -1.260000, -53.560000,2011-11-27 00:00:00,MSG-02,Brasil,PARÁ,PRAINHA,Amazônia,,,,0,
+  -2.530000, -45.210000,2011-11-30 02:15:00,MSG-02,Brasil,MARANHÃO,PINHEIRO,Amazônia,,,,0,
+  -3.410000, -47.390000,2011-12-11 00:00:00,MSG-02,Brasil,PARÁ,PARAGOMINAS,Amazônia,,,,0,
+  -3.410000, -47.390000,2011-12-13 00:30:00,MSG-02,Brasil,PARÁ,PARAGOMINAS,Amazônia,,,,0,
+  -2.900000, -45.280000,2011-12-19 00:00:00,MSG-02,Brasil,MARANHÃO,PEDRO DO ROSÁRIO,Amazônia,,,,0,
+ -13.260000, -61.835000,2011-10-20 17:26:45,NOAA-19,Brasil,RONDÔNIA,CEREJEIRAS,Amazônia,,,,0,
+  -6.790000, -45.710000,2011-07-27 20:45:00,MSG-02,Brasil,MARANHÃO,SÃO RAIMUNDO DAS MANGABEIRAS,Cerrado,,,,0,
+ -12.560000, -58.100000,2011-07-27 18:30:00,MSG-02,Brasil,MATO GROSSO,BRASNORTE,Cerrado,,,,0,
+  -9.443500, -59.620000,2011-08-04 21:15:00,GOES-12,Brasil,MATO GROSSO,COLNIZA,Amazônia,,,,0,

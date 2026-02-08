@@ -1,0 +1,10 @@
+latitude,longitude,data_pas,satelite,pais,estado,municipio,bioma,numero_dias_sem_chuva,precipitacao,risco_fogo,id_area_industrial,frp
+ -10.556670, -50.103330,2007-09-03 03:29:55,NOAA-18D,Brasil,TOCANTINS,PIUM,Cerrado,,,,0,
+ -10.093330, -50.768330,2007-09-03 03:29:55,NOAA-18D,Brasil,MATO GROSSO,VILA RICA,Amazônia,,,,0,
+  -3.566670, -50.666670,2007-11-16 18:00:00,GOES-10,Brasil,PARÁ,PACAJÁ,Amazônia,,,,0,
+ -16.088330, -49.741670,2007-07-26 19:31:27,NOAA-12,Brasil,GOIÁS,ITABERAÍ,Cerrado,,,,0,
+ -11.000000, -46.666670,2007-09-19 11:45:00,MSG-02,Brasil,TOCANTINS,MATEIROS,Cerrado,,,,0,
+  -2.250000, -46.900000,2007-11-14 17:15:00,GOES-10,Brasil,PARÁ,NOVA ESPERANÇA DO PIRIÁ,Amazônia,,,,0,
+ -21.466670, -51.016670,2007-03-28 02:30:00,GOES-10,Brasil,SÃO PAULO,ADAMANTINA,Mata Atlântica,,,,0,
+ -20.215000, -49.566670,2007-04-03 00:57:14,NOAA-17,Brasil,SÃO PAULO,PALESTINA,Mata Atlântica,,,,0,
+ -22.166670, -51.700000,2007-04-11 00:30:00,GOES-10,Brasil,SÃO PAULO,SANTO ANASTÁCIO,Mata Atlântica,,,,0,

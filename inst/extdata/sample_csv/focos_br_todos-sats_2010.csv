@@ -1,0 +1,10 @@
+latitude,longitude,data_pas,satelite,pais,estado,municipio,bioma,numero_dias_sem_chuva,precipitacao,risco_fogo,id_area_industrial,frp
+ -11.250000, -50.500000,2010-08-29 09:30:00,MSG-02,Brasil,TOCANTINS,LAGOA DA CONFUSÃO,Cerrado,,,,0,
+  -9.263520, -65.316670,2010-08-31 20:30:00,GOES-12,Brasil,AMAZONAS,LÁBREA,Amazônia,,,,0,
+  -6.047130, -46.450000,2010-08-31 22:30:00,GOES-12,Brasil,MARANHÃO,GRAJAÚ,Cerrado,,,,0,
+ -12.150000, -50.850000,2010-09-01 00:00:00,MSG-02,Brasil,MATO GROSSO,NOVO SANTO ANTÔNIO,Cerrado,,,,0,
+ -10.516670, -47.050000,2010-07-01 03:00:00,MSG-02,Brasil,TOCANTINS,MATEIROS,Cerrado,,,,0,
+  -8.013640, -49.933330,2010-08-20 22:30:00,GOES-12,Brasil,PARÁ,REDENÇÃO,Amazônia,,,,0,
+ -11.250000, -50.433330,2010-08-29 10:45:00,MSG-02,Brasil,TOCANTINS,LAGOA DA CONFUSÃO,Cerrado,,,,0,
+  -5.221670, -44.551670,2010-11-29 21:28:19,NOAA-16,Brasil,MARANHÃO,TUNTUM,Cerrado,,,,0,
+ -14.936670, -52.636670,2010-08-30 08:17:16,NOAA-15D,Brasil,MATO GROSSO,BARRA DO GARÇAS,Cerrado,,,,0,

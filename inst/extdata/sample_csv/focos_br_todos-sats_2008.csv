@@ -1,0 +1,10 @@
+latitude,longitude,data_pas,satelite,pais,estado,municipio,bioma,numero_dias_sem_chuva,precipitacao,risco_fogo,id_area_industrial,frp
+ -11.536000, -43.784000,2008-10-21 00:57:23,ATSR,Brasil,BAHIA,WANDERLEY,Cerrado,,,,0,
+ -11.518000, -43.788000,2008-10-21 00:57:23,ATSR,Brasil,BAHIA,WANDERLEY,Cerrado,,,,0,
+ -10.589000, -43.414000,2008-10-21 00:57:37,ATSR,Brasil,BAHIA,BURITIRAMA,Cerrado,,,,0,
+ -10.591000, -43.423000,2008-10-21 00:57:37,ATSR,Brasil,BAHIA,BURITIRAMA,Cerrado,,,,0,
+ -14.364000, -46.295000,2008-10-30 01:13:45,ATSR,Brasil,GOIÁS,POSSE,Cerrado,,,,0,
+ -13.725000, -44.308000,2008-10-30 01:13:48,ATSR,Brasil,BAHIA,CORIBE,Cerrado,,,,0,
+ -13.410000, -45.359000,2008-10-30 01:13:57,ATSR,Brasil,BAHIA,CORRENTINA,Cerrado,,,,0,
+ -11.916670, -57.250000,2008-09-29 23:15:00,GOES-10,Brasil,MATO GROSSO,NOVA MARINGÁ,Amazônia,,,,0,
+ -16.366670, -56.750000,2008-09-30 23:00:00,GOES-10,Brasil,MATO GROSSO,POCONÉ,Pantanal,,,,0,

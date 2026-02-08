@@ -1,0 +1,10 @@
+latitude,longitude,data_pas,satelite,pais,estado,municipio,bioma,numero_dias_sem_chuva,precipitacao,risco_fogo,id_area_industrial,frp
+    2.460000 ,  -61.190000 ,2018-03-01 23:05:45,GOES-16,Brasil,RORAIMA,MUCAJAÍ,Amazônia, 0 ,0.7,0.9, 0 ,
+  -29.869290 ,  -51.550510 ,2018-06-09 16:54:00,NPP-375,Brasil,RIO GRANDE DO SUL,TRIUNFO,Pampa, 2 ,0,0.8, 0 ,3
+  -13.169000 ,  -59.934000 ,2018-06-09 14:20:00,TERRA_M-T,Brasil,MATO GROSSO,COMODORO,Amazônia, 7 ,0,0.7, 0 ,8.2
+  -13.170000 ,  -59.925000 ,2018-06-09 14:20:00,TERRA_M-T,Brasil,MATO GROSSO,COMODORO,Amazônia, 7 ,0,0.6, 0 ,12.8
+  -13.574000 ,  -56.876000 ,2018-06-09 14:20:00,TERRA_M-T,Brasil,MATO GROSSO,SÃO JOSÉ DO RIO CLARO,Cerrado, 18 ,0,1, 0 ,14.4
+  -13.671000 ,  -56.682000 ,2018-06-09 14:20:00,TERRA_M-T,Brasil,MATO GROSSO,SÃO JOSÉ DO RIO CLARO,Cerrado, 21 ,0,0.7, 0 ,12.6
+  -13.676000 ,  -56.647000 ,2018-06-09 14:20:00,TERRA_M-T,Brasil,MATO GROSSO,SÃO JOSÉ DO RIO CLARO,Cerrado, 21 ,0,0.5, 0 ,15.9
+  -13.975000 ,  -56.778000 ,2018-06-09 14:20:00,TERRA_M-T,Brasil,MATO GROSSO,DIAMANTINO,Cerrado, 12 ,0,1, 0 ,14.8
+   -9.138000 ,  -56.879000 ,2018-06-09 14:20:00,TERRA_M-T,Brasil,PARÁ,JACAREACANGA,Amazônia, 1 ,0,1, 0 ,9.2

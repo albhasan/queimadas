@@ -1,0 +1,10 @@
+latitude,longitude,data_pas,satelite,pais,estado,municipio,bioma,numero_dias_sem_chuva,precipitacao,risco_fogo,id_area_industrial,frp
+  -7.140000, -60.191670,2009-08-11 21:18:38,NOAA-16,Brasil,AMAZONAS,APUÍ,Amazônia,,,,0,
+ -14.566670, -58.816670,2009-08-16 20:45:00,GOES-10,Brasil,MATO GROSSO,TANGARÁ DA SERRA,Cerrado,,,,0,
+ -13.331670, -52.426670,2009-09-29 21:44:30,NOAA-16,Brasil,MATO GROSSO,CANARANA,Amazônia,,,,0,
+ -11.236670, -56.311670,2009-09-29 21:44:30,NOAA-16,Brasil,MATO GROSSO,TABAPORÃ,Amazônia,,,,0,
+ -14.573330, -52.828330,2009-09-30 21:31:20,NOAA-16,Brasil,MATO GROSSO,CAMPINÁPOLIS,Cerrado,,,,0,
+  -4.756670, -55.908330,2009-09-30 21:31:20,NOAA-16,Brasil,PARÁ,TRAIRÃO,Amazônia,,,,0,
+  -4.020000, -55.960000,2009-10-01 21:19:25,NOAA-16,Brasil,PARÁ,ITAITUBA,Amazônia,,,,0,
+  -3.813330, -51.335000,2009-10-01 21:19:25,NOAA-16,Brasil,PARÁ,ANAPU,Amazônia,,,,0,
+  -5.821670, -49.050000,2009-10-02 21:08:00,NOAA-16,Brasil,PARÁ,MARABÁ,Amazônia,,,,0,

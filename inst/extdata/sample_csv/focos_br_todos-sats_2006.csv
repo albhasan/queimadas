@@ -1,0 +1,10 @@
+latitude,longitude,data_pas,satelite,pais,estado,municipio,bioma,numero_dias_sem_chuva,precipitacao,risco_fogo,id_area_industrial,frp
+ -17.899000, -51.196000,2006-08-13 01:38:47,ATSR,Brasil,GOIÁS,RIO VERDE,Cerrado,,,,0,
+ -17.972000, -51.615000,2006-08-13 01:38:47,ATSR,Brasil,GOIÁS,JATAÍ,Cerrado,,,,0,
+ -13.957000, -44.871000,2006-09-05 01:16:45,ATSR,Brasil,BAHIA,COCOS,Cerrado,,,,0,
+ -13.948000, -44.874000,2006-09-05 01:16:45,ATSR,Brasil,BAHIA,COCOS,Cerrado,,,,0,
+  -6.976670, -46.840000,2006-07-17 20:13:27,NOAA-12,Brasil,MARANHÃO,FEIRA NOVA DO MARANHÃO,Cerrado,,,,0,
+  -6.328330, -55.556670,2006-10-05 20:37:15,NOAA-12,Brasil,PARÁ,ITAITUBA,Amazônia,,,,0,
+  -4.051670, -50.828330,2006-10-13 20:39:42,NOAA-12,Brasil,PARÁ,PACAJÁ,Amazônia,,,,0,
+ -13.579630, -57.350000,2006-05-07 00:00:00,GOES-12,Brasil,MATO GROSSO,NOVA MARINGÁ,Amazônia,,,,0,
+ -12.079850, -64.750000,2006-05-14 05:00:00,GOES-12,Brasil,RONDÔNIA,GUAJARÁ-MIRIM,Amazônia,,,,0,

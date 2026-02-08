@@ -1,0 +1,10 @@
+latitude,longitude,data_pas,satelite,pais,estado,municipio,bioma,numero_dias_sem_chuva,precipitacao,risco_fogo,id_area_industrial,frp
+  -17.749630 ,  -42.892830 ,2020-01-01 04:18:00,NPP-375D,Brasil,MINAS GERAIS,ITAMARANDIBA,Cerrado, 5 ,8,0.1, 0 ,2.5
+  -19.482110 ,  -42.531200 ,2020-01-06 04:24:00,NPP-375D,Brasil,MINAS GERAIS,IPATINGA,Mata Atlântica, 0 ,0.8,-999, 220 ,1.6
+  -17.733220 ,  -57.292830 ,2020-01-06 04:24:00,NPP-375D,Brasil,MATO GROSSO,POCONÉ,Pantanal, 3 ,7.5,0.1, 0 ,4.1
+  -17.734390 ,  -57.286990 ,2020-01-06 04:24:00,NPP-375D,Brasil,MATO GROSSO,POCONÉ,Pantanal, 3 ,7.3,0.1, 0 ,2.8
+  -17.734620 ,  -57.311510 ,2020-01-06 04:24:00,NPP-375D,Brasil,MATO GROSSO,POCONÉ,Pantanal, 4 ,8,0.2, 0 ,5.9
+    4.039360 ,  -59.726150 ,2020-01-06 06:00:00,NPP-375D,Brasil,RORAIMA,NORMANDIA,Amazônia, 9 ,0,1, 0 ,0.8
+   -7.500580 ,  -34.861890 ,2020-01-06 02:42:00,NPP-375D,Brasil,PARAÍBA,CAAPORÃ,Mata Atlântica, -999 ,0,0.8, 0 ,9.8
+   -7.501900 ,  -34.854870 ,2020-01-06 02:42:00,NPP-375D,Brasil,PARAÍBA,PITIMBU,Mata Atlântica, -999 ,0,0.8, 0 ,6.3
+   -7.503210 ,  -34.864090 ,2020-01-06 02:42:00,NPP-375D,Brasil,PARAÍBA,CAAPORÃ,Mata Atlântica, -999 ,0,0.8, 0 ,16

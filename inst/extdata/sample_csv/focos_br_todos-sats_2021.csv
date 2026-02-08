@@ -1,0 +1,10 @@
+latitude,longitude,data_pas,satelite,pais,estado,municipio,bioma,numero_dias_sem_chuva,precipitacao,risco_fogo,id_area_industrial,frp
+   -4.218320 ,  -38.255330 ,2021-12-02 16:13:00,NPP-375,Brasil,CEARÁ,CASCAVEL,Caatinga, 27 ,0,1, 0 ,4.2
+   -4.221630 ,  -38.858280 ,2021-12-02 16:13:00,NPP-375,Brasil,CEARÁ,PACOTI,Caatinga, 12 ,0.2,1, 0 ,7.4
+   -5.954340 ,  -45.624640 ,2021-12-02 16:13:00,NPP-375,Brasil,MARANHÃO,GRAJAÚ,Cerrado, 2 ,0.3,0.1, 0 ,20.8
+   -4.224010 ,  -38.850060 ,2021-12-02 16:13:00,NPP-375,Brasil,CEARÁ,PACOTI,Caatinga, 10 ,0.3,1, 0 ,2.2
+   -2.342240 ,  -44.510740 ,2021-12-02 16:15:00,NPP-375,Brasil,MARANHÃO,ALCÂNTARA,Amazônia, -999 ,0,0.9, 0 ,14
+   -4.261230 ,  -38.651020 ,2021-12-02 16:13:00,NPP-375,Brasil,CEARÁ,ACARAPE,Caatinga, 18 ,0,1, 0 ,78.6
+   -3.164450 ,  -45.353290 ,2021-12-02 16:15:00,NPP-375,Brasil,MARANHÃO,PEDRO DO ROSÁRIO,Amazônia, 4 ,0.2,1, 0 ,37.8
+   -5.958200 ,  -45.624020 ,2021-12-02 16:13:00,NPP-375,Brasil,MARANHÃO,GRAJAÚ,Cerrado, 2 ,0.3,0.1, 0 ,20.8
+   -1.949570 ,  -45.541470 ,2021-12-02 16:15:00,NPP-375,Brasil,MARANHÃO,TURIAÇU,Amazônia, 20 ,4.5,0.5, 0 ,3.3
