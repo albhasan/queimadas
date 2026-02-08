@@ -1,0 +1,65 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# queimadas
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The goal of `queimadas` is to provide tools for analyzing and reporting data
+from wildfires in Brazil. These data aids during the selection of the
+reference data used by the *Programa Queimadas* at the National Institute for
+Space Research in Brazil.
+
+## Installation
+
+You can install the development version of queimadas from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("pak")
+pak::pak("albhasan/queimadas")
+```
+
+## Examples
+
+This example shows how to create a database with sample data from queimadas.
+
+```{r example}
+library(queimadas)
+
+# List CSV files with data.
+csv_files <-
+  list.files(
+    path = system.file("extdata", "sample_csv", package = "queimadas"),
+    pattern = "*csv",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+
+# Create a file database. 
+db_con <- DBI::dbConnect(
+  drv = RSQLite::SQLite(),
+  dbname = tempfile(pattern = "queimadas.sqlite_")
+)
+
+# Load sample data to the database.
+load_database(
+  db_con = db_con,
+  file_paths = csv_files,
+  c_types = "ddccccccdnncd",
+  table_name = "fire_foci",
+  disconnect = TRUE
+)
+```

@@ -1,1 +1,79 @@
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
 # queimadas
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The goal of `queimadas` is to provide tools for analyzing and reporting
+data from wildfires in Brazil. These data aids during the selection of
+the reference data used by the *Programa Queimadas* at the National
+Institute for Space Research in Brazil.
+
+## Installation
+
+You can install the development version of queimadas from
+[GitHub](https://github.com/) with:
+
+``` r
+# install.packages("pak")
+pak::pak("albhasan/queimadas")
+```
+
+## Examples
+
+This example shows how to create a database with sample data from
+queimadas.
+
+``` r
+library(queimadas)
+
+# List CSV files with data.
+csv_files <-
+  list.files(
+    path = system.file("extdata", "sample_csv", package = "queimadas"),
+    pattern = "*csv",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+
+# Create a file database. 
+db_con <- DBI::dbConnect(
+  drv = RSQLite::SQLite(),
+  dbname = tempfile(pattern = "queimadas.sqlite_")
+)
+
+# Load sample data to the database.
+load_database(
+  db_con = db_con,
+  file_paths = csv_files,
+  c_types = "ddccccccdnncd",
+  table_name = "fire_foci",
+  disconnect = TRUE
+)
+#> Creating the table fire_foci ...
+#> Loading file /tmp/RtmpE3rbQb/temp_libpath10d0465ff8bf6c/queimadas/extdata/sample_csv/focos_br_todos-sats_2003.csv to the database...
+#> Loading file /tmp/RtmpE3rbQb/temp_libpath10d0465ff8bf6c/queimadas/extdata/sample_csv/focos_br_todos-sats_2004.csv to the database...
+#> Loading file /tmp/RtmpE3rbQb/temp_libpath10d0465ff8bf6c/queimadas/extdata/sample_csv/focos_br_todos-sats_2005.csv to the database...
+#> Loading file /tmp/RtmpE3rbQb/temp_libpath10d0465ff8bf6c/queimadas/extdata/sample_csv/focos_br_todos-sats_2006.csv to the database...
+#> Loading file /tmp/RtmpE3rbQb/temp_libpath10d0465ff8bf6c/queimadas/extdata/sample_csv/focos_br_todos-sats_2007.csv to the database...
+#> Loading file /tmp/RtmpE3rbQb/temp_libpath10d0465ff8bf6c/queimadas/extdata/sample_csv/focos_br_todos-sats_2008.csv to the database...
+#> Loading file /tmp/RtmpE3rbQb/temp_libpath10d0465ff8bf6c/queimadas/extdata/sample_csv/focos_br_todos-sats_2009.csv to the database...
+#> Loading file /tmp/RtmpE3rbQb/temp_libpath10d0465ff8bf6c/queimadas/extdata/sample_csv/focos_br_todos-sats_2010.csv to the database...
+#> Loading file /tmp/RtmpE3rbQb/temp_libpath10d0465ff8bf6c/queimadas/extdata/sample_csv/focos_br_todos-sats_2011.csv to the database...
+#> Loading file /tmp/RtmpE3rbQb/temp_libpath10d0465ff8bf6c/queimadas/extdata/sample_csv/focos_br_todos-sats_2012.csv to the database...
+#> Loading file /tmp/RtmpE3rbQb/temp_libpath10d0465ff8bf6c/queimadas/extdata/sample_csv/focos_br_todos-sats_2013.csv to the database...
+#> Loading file /tmp/RtmpE3rbQb/temp_libpath10d0465ff8bf6c/queimadas/extdata/sample_csv/focos_br_todos-sats_2014.csv to the database...
+#> Loading file /tmp/RtmpE3rbQb/temp_libpath10d0465ff8bf6c/queimadas/extdata/sample_csv/focos_br_todos-sats_2015.csv to the database...
+#> Loading file /tmp/RtmpE3rbQb/temp_libpath10d0465ff8bf6c/queimadas/extdata/sample_csv/focos_br_todos-sats_2016.csv to the database...
+#> Loading file /tmp/RtmpE3rbQb/temp_libpath10d0465ff8bf6c/queimadas/extdata/sample_csv/focos_br_todos-sats_2017.csv to the database...
+#> Loading file /tmp/RtmpE3rbQb/temp_libpath10d0465ff8bf6c/queimadas/extdata/sample_csv/focos_br_todos-sats_2018.csv to the database...
+#> Loading file /tmp/RtmpE3rbQb/temp_libpath10d0465ff8bf6c/queimadas/extdata/sample_csv/focos_br_todos-sats_2019.csv to the database...
+#> Loading file /tmp/RtmpE3rbQb/temp_libpath10d0465ff8bf6c/queimadas/extdata/sample_csv/focos_br_todos-sats_2020.csv to the database...
+#> Loading file /tmp/RtmpE3rbQb/temp_libpath10d0465ff8bf6c/queimadas/extdata/sample_csv/focos_br_todos-sats_2021.csv to the database...
+#> Loading file /tmp/RtmpE3rbQb/temp_libpath10d0465ff8bf6c/queimadas/extdata/sample_csv/focos_br_todos-sats_2022.csv to the database...
+#> Loading file /tmp/RtmpE3rbQb/temp_libpath10d0465ff8bf6c/queimadas/extdata/sample_csv/focos_br_todos-sats_2023.csv to the database...
+#> Loading file /tmp/RtmpE3rbQb/temp_libpath10d0465ff8bf6c/queimadas/extdata/sample_csv/focos_br_todos-sats_2024.csv to the database...
+#> Closing database's connection...
+```
