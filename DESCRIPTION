@@ -18,9 +18,14 @@ Depends:
     R (>= 4.1.0)
 Imports:
     DBI,
+    dplyr,
     httr,
+    lubridate,
+    magrittr,
     purrr,
     readr,
     rvest,
     stringr,
+    tidyselect,
     utils
+LazyData: true

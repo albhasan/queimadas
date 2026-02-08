@@ -30,9 +30,47 @@ ref_satellite <- c(
   candidate = "NPP-375D"
 )
 
+plot_size_a5 <- list(
+  height = 148.5,
+  width = 210,
+  units = "mm"
+)
+
+plot_size_a4 <- list(
+  height = 297,
+  width = 210,
+  units = "mm"
+)
+
+plot_size_a3 <- list(
+  height = 297,
+  width = 420,
+  units = "mm"
+)
+
 
 
 #---- Utilitary functions ----
+
+
+
+# Get the yearly breaklines for figures
+#
+# @description
+# Get the points to insert breaklines in the figures.
+#
+# @param data_tb a tibble.
+#
+# @return a character.
+#
+get_break_lines_year <- function(data_tb) {
+  data_tb %>%
+  dplyr::select(period) %>%
+  dplyr::distinct(period) %>%
+  dplyr::filter(stringr::str_detect(string = period, pattern = "-08$")) %>%
+  dplyr::pull(period) %>%
+  return()
+}
 
 # Filter complete series
 #
@@ -100,48 +138,14 @@ add_sat_family <- function(x) {
 
 # Connect to the database.
 db_con <- DBI::dbConnect(RSQLite::SQLite(), dbname = sqlite_file)
-foci_tb <- dplyr::tbl(db_con, table_name)
-
-
-
-#---- Prepare the data ----
-
-foci_tb <-
-  db_con %>%
-  dplyr::tbl(table_name) %>%
-  dplyr::filter(
-    pais == "Brasil",
-    id_area_industrial == "0"
-  ) %>%
-  dplyr::mutate(
-    afternoon = lubridate::hour(lubridate::as_datetime(data_pas)) >= 12
-  )
 
 
 
 #---- Data: Brazil by year and month ----
 
 brazil_ym_tb <-
-  foci_tb %>%
-   dplyr::mutate(
-     period = stringr::str_sub(string = data_pas, start = 1L, end = 7L),
-     satelite = dplyr::if_else(
-       condition = satelite == "NPP-375" & afternoon == 1,
-       true = "NPP-375-PM",
-       false = satelite
-     ),
-     satelite = dplyr::if_else(
-       condition = satelite == "NPP-375" & afternoon == 0,
-       true = "NPP-375-AM",
-       false = satelite
-     )
-   ) %>%
-  dplyr::select(satelite, period) %>%
-  dplyr::summarize(
-    n = dplyr::n(),
-    .by = tidyselect::all_of(x = c("period", "satelite"))
-  ) %>%
-  dplyr::arrange(period, satelite) %>%
+  db_con %>%
+  get_brazil_year_month (table_name = table_name) %>%
   dplyr::collect()
 
 # TODO: Check if the AM/PM separation was already done.
@@ -192,14 +196,9 @@ sat_tb <-
 
 # Brazil data by month (no year).
 brazil_m_tb <-
-  brazil_ym_tb %>%
-  dplyr::mutate(
-      period = stringr::str_sub(string = period, start = 6L, end = 7L)
-  ) %>%
-  dplyr::summarize(
-    n = sum(n, na.rm = FALSE),
-    .by = tidyselect::all_of(x = c("period", "satelite"))
-  )
+  db_con %>%
+  get_brazil_month(table_name = table_name) %>%
+  dplyr::collect()
 
 # Plot of points of montly data (no year) in Brazil with regression lines.
 plot_lm_brazil_month <-
@@ -264,9 +263,9 @@ plot_lm_brazil_month <-
 ggplot2::ggsave(
   filename = file.path(out_dir, "plot_lm_brazil_month.png"),
   plot = plot_lm_brazil_month,
-  width = 297,
-  height = 210,
-  units = "mm"
+  width = plot_size_a3[["width"]],
+  height = plot_size_a3[["height"]],
+  units = plot_size_a3[["units"]]
 )
 
 
@@ -310,9 +309,9 @@ plot_cor_brazil_month <-
 ggplot2::ggsave(
   filename = file.path(out_dir, "plot_cor_brazil_month.png"),
   plot = plot_cor_brazil_month,
-  width = 297 * 2,
-  height = 210 * 2,
-  units = "mm"
+  width = plot_size_a4[["width"]],
+  height = plot_size_a4[["height"]],
+  units = plot_size_a4[["units"]]
 )
 
 
@@ -320,12 +319,10 @@ ggplot2::ggsave(
 #---- Line plot ----
 
 # Break lines at Auguts of each year in the data.
-break_lines <-
-  brazil_ym_tb %>%
-  dplyr::select(period) %>%
-  dplyr::distinct(period) %>%
-  dplyr::filter(stringr::str_detect(string = period, pattern = "-08$")) %>%
-  dplyr::pull(period)
+
+
+
+break_lines <- get_break_lines_year(data_tb = brazil_ym_tb)
 
 plot_line_brazil_year_month <-
   brazil_ym_tb %>%
@@ -353,9 +350,9 @@ plot_line_brazil_year_month <-
 ggplot2::ggsave(
   filename = file.path(out_dir, "plot_line_brazil_year_month.png"),
   plot = plot_line_brazil_year_month,
-  width = 297,
-  height = 210,
-  units = "mm"
+  width = plot_size_a3[["width"]],
+  height = plot_size_a3[["height"]],
+  units = plot_size_a3[["units"]]
 )
 
 
@@ -363,8 +360,7 @@ ggplot2::ggsave(
 #---- Brazil data by state, year and month ----
 
 brstate_tb <-
-  geobr::read_state() %>%
-  sf::st_drop_geometry() %>%
+  queimadas::brstate_tb %>%
   dplyr::select(estado = name_state, region = name_region) %>%
   dplyr::mutate(
     estado = toupper(estado),
@@ -372,7 +368,8 @@ brstate_tb <-
   )
 
 brazil_state_ym_tb <-
-  foci_tb %>%
+  db_con %>%
+  get_brazil(table_name = table_name) %>%
   dplyr::select(data_pas, satelite, estado) %>%
   dplyr::filter(satelite %in% ref_satellite) %>%
   dplyr::mutate(
@@ -400,14 +397,9 @@ brazil_region_ym_tb <-
     .by = tidyselect::all_of(x = c("period", "satelite", "region"))
   )
 
-break_lines <-
-  brazil_region_ym_tb %>%
-  dplyr::select(period) %>%
-  dplyr::distinct(period) %>%
-  dplyr::filter(stringr::str_detect(string = period, pattern = "-08$")) %>%
-  dplyr::pull(period)
+break_lines <- get_break_lines_year(data_tb = brazil_ym_tb)
 
-plot_line_brazil_region_year_month <-
+plot_line_brazil_state_year_month <-
   brazil_region_ym_tb %>%
   dplyr::mutate(
     sat_family = dplyr::case_when(
@@ -441,7 +433,7 @@ plot_line_brazil_region_year_month <-
 ggplot2::ggsave(
   filename = file.path(out_dir, "plot_line_brazil_region_year_month.png"),
   plot = plot_line_brazil_state_year_month,
-  width = 297 * 4,
-  height = 210 * 4,
-  units = "mm"
+  width = plot_size_a3[["width"]],
+  height = plot_size_a3[["height"]],
+  units = plot_size_a3[["units"]]
 )
