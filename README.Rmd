@@ -55,11 +55,13 @@ db_con <- DBI::dbConnect(
 )
 
 # Load sample data to the database.
-load_database(
-  db_con = db_con,
-  file_paths = csv_files,
-  c_types = "ddccccccdnncd",
-  table_name = "fire_foci",
-  disconnect = TRUE
+suppressMessages(
+  load_database(
+    db_con = db_con,
+    file_paths = csv_files,
+    c_types = "ddccccccdnncd",
+    table_name = "fire_foci",
+    disconnect = TRUE
+  )
 )
 ```
