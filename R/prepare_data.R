@@ -7,7 +7,7 @@
 #' @param db_con a conection to a data base of queimadas.
 #' @param table_name name of the table in the data base.
 #'
-#' return a DBI object. This object requires a call to `dplyr::collect()` to
+#' @return a DBI object. This object requires a call to `dplyr::collect()` to
 #' retrieve the actual data.
 #'
 #' @importFrom magrittr "%>%"
@@ -40,7 +40,7 @@ get_brazil <- function(db_con, table_name) {
 #' @param db_con a conection to a data base of queimadas.
 #' @param table_name name of the table in the data base.
 #'
-#' return a DBI object. This object requires a call to `dplyr::collect()` to
+#' @return a DBI object. This object requires a call to `dplyr::collect()` to
 #' retrieve the actual data.
 #'
 #' @importFrom magrittr "%>%"
@@ -85,7 +85,7 @@ get_brazil_year_month <- function(db_con, table_name) {
 #' @param db_con a conection to a data base of queimadas.
 #' @param table_name name of the table in the data base.
 #'
-#' return a DBI object. This object requires a call to `dplyr::collect()` to
+#' @return a DBI object. This object requires a call to `dplyr::collect()` to
 #' retrieve the actual data.
 #'
 #' @importFrom magrittr "%>%"
@@ -106,5 +106,44 @@ get_brazil_month <- function(db_con, table_name) {
     n = sum(n, na.rm = FALSE),
     .by = tidyselect::all_of(x = c("period", "satelite"))
   ) %>% 
+  return()
+}
+
+
+
+#' Get pairs of satellites for analysis
+#'
+#' @description
+#' Get a data frame of pairs of satellites for analysis.
+#'
+#' @param data_tb a tibble with data from queimadas.
+#' @param satellites a character with satellite names to include. Among their
+#' names, it must be those of candidate satelltes.
+#'
+#' @return a tibble.
+#'
+#' @importFrom magrittr "%>%"
+#'
+#' @export
+#'
+get_sat_pairs <- function(data_tb, satellites) {
+  stopifnot("Candidate names not found in satellites!" =
+            "candidate" %in% names(satellites))
+
+  satelite <- satelite_x <- satelite_y <- NULL
+  . <- NULL
+
+  #TODO: Remove magrittr dependency!
+  data_tb %>%
+  dplyr::select(satelite) %>%
+  dplyr::distinct(satelite) %>%
+  dplyr::filter(satelite %in% satellites) %>%
+  dplyr::pull(satelite) %>%
+  tidyr::expand_grid(satelite_x = ., satelite_y = .) %>%
+  dplyr::filter(
+    satelite_x != satelite_y,
+    satelite_y %in% satellites[names(satellites) == "candidate"]
+  ) %>%
+  dplyr::arrange(satelite_y) %>%
   return()
 }

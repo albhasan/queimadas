@@ -174,21 +174,11 @@ brazil_ym_tb %>%
 
 
 
-#---- Combinatory of satellites ----
+#---- Get satellite pairs for analysis ----
 
-
-sat_tb <-
+sat_tb <- 
   brazil_ym_tb %>%
-  dplyr::select(satelite) %>%
-  dplyr::distinct(satelite) %>%
-  dplyr::filter(satelite %in% ref_satellite) %>%
-  dplyr::pull(satelite) %>%
-  expand_grid(satelite_x = ., satelite_y = .) %>%
-  dplyr::filter(
-    satelite_x != satelite_y,
-    satelite_y %in% ref_satellite[names(ref_satellite) == "candidate"]
-  ) %>%
-  dplyr::arrange(satelite_y)
+  get_sat_pairs(satellites = ref_satellite)
 
 
 

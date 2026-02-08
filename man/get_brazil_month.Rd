@@ -9,10 +9,11 @@ get_brazil_month(db_con, table_name)
 \arguments{
 \item{db_con}{a conection to a data base of queimadas.}
 
-\item{table_name}{name of the table in the data base.
-
-return a DBI object. This object requires a call to \code{dplyr::collect()} to
-retrieve the actual data.}
+\item{table_name}{name of the table in the data base.}
+}
+\value{
+a DBI object. This object requires a call to \code{dplyr::collect()} to
+retrieve the actual data.
 }
 \description{
 Get data from the database coresponding to Brazil, excluding industrial
