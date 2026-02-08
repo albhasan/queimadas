@@ -23,8 +23,25 @@ pak::pak("albhasan/queimadas")
 
 ## Examples
 
-This example shows how to create a database with sample data from
-queimadas.
+The following example shows how to download queimadas data.
+
+``` r
+
+zip_files <-
+  download_data(
+    out_dir = tempdir(),
+    data_url = get_data_url(),
+    wait_time = 5,
+    overwrite_files = FALSE,
+    quiet = FALSE
+  )
+```
+
+These downloaded data still requires decompression, which can be
+achieved using `unzip_files`. This will produce a set of CSV files.
+
+The next example shows how to upload CSV data from queimadas to a
+database.
 
 ``` r
 library(queimadas)
