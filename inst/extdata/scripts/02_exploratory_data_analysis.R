@@ -437,3 +437,9 @@ ggplot2::ggsave(
   height = plot_size_a3[["height"]],
   units = plot_size_a3[["units"]]
 )
+
+
+
+#---- Disconnect from the database ----
+
+DBI::dbDisconnect(conn = db_con)
