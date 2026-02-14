@@ -15,7 +15,7 @@ library(tidyr)
 
 sqlite_file <- "~/Downloads/fire.sqlite"
 table_name <- "fire_foci"
-out_dir <- "~/Downloads/tmp/fire_results"
+out_dir <- "/home/alber/Documents/github/slides/queimadas/slides/figures"
 
 stopifnot("Database file not found!" = file.exists(sqlite_file))
 stopifnot("Directory not found!" = dir.exists(out_dir))
@@ -30,23 +30,8 @@ ref_satellite <- c(
   candidate = "NPP-375D"
 )
 
-plot_size_a5 <- list(
-  height = 148.5,
-  width = 210,
-  units = "mm"
-)
-
-plot_size_a4 <- list(
-  height = 297,
-  width = 210,
-  units = "mm"
-)
-
-plot_size_a3 <- list(
-  height = 297,
-  width = 420,
-  units = "mm"
-)
+plot_size_a5_ls <- queimadas::get_paper_size(name = "A5", orientation = "ls")
+plot_size_a4_ls <- queimadas::get_paper_size(name = "A4", orientation = "ls")
 
 
 
@@ -158,19 +143,19 @@ sats[stringr::str_starts(sats, "NPP")]
 #---- Table of number of foci in Brazil per year-month and satellite ----
 
 # Save data as CSV.
-brazil_ym_tb %>%
-  add_sat_family() %>%
-  tidyr::pivot_wider(
-    names_from = satelite,
-    values_from = n,
-    names_repair = "universal"
-  ) %>%
-  dplyr::select(order(colnames(.))) %>%
-  dplyr::relocate(period) %>%
-  dplyr::arrange(period) %>%
-  readr::write_csv(
-    file = file.path(out_dir, "brasil_satellite_year_month.csv")
-  )
+# brazil_ym_tb %>%
+#   add_sat_family() %>%
+#   tidyr::pivot_wider(
+#     names_from = satelite,
+#     values_from = n,
+#     names_repair = "universal"
+#   ) %>%
+#   dplyr::select(order(colnames(.))) %>%
+#   dplyr::relocate(period) %>%
+#   dplyr::arrange(period) %>%
+#   readr::write_csv(
+#     file = file.path(out_dir, "brasil_satellite_year_month.csv")
+#   )
 
 
 
@@ -253,9 +238,9 @@ plot_lm_brazil_month <-
 ggplot2::ggsave(
   filename = file.path(out_dir, "plot_lm_brazil_month.png"),
   plot = plot_lm_brazil_month,
-  width = plot_size_a3[["width"]],
-  height = plot_size_a3[["height"]],
-  units = plot_size_a3[["units"]]
+  width = plot_size_a5_ls[["width"]],
+  height = plot_size_a5_ls[["height"]],
+  units = plot_size_a5_ls[["units"]]
 )
 
 
@@ -299,9 +284,9 @@ plot_cor_brazil_month <-
 ggplot2::ggsave(
   filename = file.path(out_dir, "plot_cor_brazil_month.png"),
   plot = plot_cor_brazil_month,
-  width = plot_size_a4[["width"]],
-  height = plot_size_a4[["height"]],
-  units = plot_size_a4[["units"]]
+  width = plot_size_a5_ls[["width"]],
+  height = plot_size_a5_ls[["height"]],
+  units = plot_size_a5_ls[["units"]]
 )
 
 
@@ -340,9 +325,9 @@ plot_line_brazil_year_month <-
 ggplot2::ggsave(
   filename = file.path(out_dir, "plot_line_brazil_year_month.png"),
   plot = plot_line_brazil_year_month,
-  width = plot_size_a3[["width"]],
-  height = plot_size_a3[["height"]],
-  units = plot_size_a3[["units"]]
+  width = plot_size_a5_ls[["width"]],
+  height = plot_size_a5_ls[["height"]],
+  units = plot_size_a5_ls[["units"]]
 )
 
 
@@ -416,16 +401,16 @@ plot_line_brazil_state_year_month <-
   ) +
   ggplot2::facet_wrap(
     facets = dplyr::vars(region),
-    ncol = 1,
+    ncol = 3,
     scales = "free"
   )
 
 ggplot2::ggsave(
   filename = file.path(out_dir, "plot_line_brazil_region_year_month.png"),
   plot = plot_line_brazil_state_year_month,
-  width = plot_size_a3[["width"]],
-  height = plot_size_a3[["height"]],
-  units = plot_size_a3[["units"]]
+  width = plot_size_a4_ls[["width"]],
+  height = plot_size_a4_ls[["height"]],
+  units = plot_size_a4_ls[["units"]]
 )
 
 

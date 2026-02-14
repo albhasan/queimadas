@@ -1,6 +1,6 @@
 Package: queimadas
 Title: Statistics from the Brazilian Queimadas Program
-Version: 0.0.0.9003
+Version: 0.0.0.9004
 Authors@R:
     person("Alber", "Sanchez", , "alber.ipia@inpe.br", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7966-2880"))

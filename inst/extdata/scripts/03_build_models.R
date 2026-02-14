@@ -2,11 +2,12 @@ library(devtools)
 devtools::load_all()
 
 library(dplyr)
+library(forecast)
 library(tibble)
 library(lubridate)
 
-library(httpgd)
-httpgd::hgd()
+#library(httpgd)
+#httpgd::hgd()
 
 
 
@@ -14,7 +15,7 @@ httpgd::hgd()
 
 sqlite_file <- "~/Downloads/fire.sqlite"
 table_name <- "fire_foci"
-out_dir <- "~/Downloads/tmp/fire_results"
+out_dir <- "/home/alber/Documents/github/slides/queimadas/slides/figures"
 
 ref_satellite <- c(
   previous = "NOAA-12",
@@ -28,6 +29,9 @@ ref_satellite <- c(
 
 stopifnot("Database file not found!" = file.exists(sqlite_file))
 stopifnot("Directory not found!" = dir.exists(out_dir))
+
+plot_size_a5_ls <- queimadas::get_paper_size(name = "A5", orientation = "ls")
+plot_size_a4_ls <- queimadas::get_paper_size(name = "A4", orientation = "ls")
 
 
 
@@ -110,7 +114,7 @@ visual_test_ts <- function(train_tb) {
 
 
 #' Fit a prophet model
-#' 
+#'
 #' @description
 #' Fit a model to the data using the `prophet` package.
 #'
@@ -159,7 +163,7 @@ component_analysis <- function(train_tb) {
       m = fire_model,
       fcst = fire_forecast,
       uncertainty = TRUE
-    ) 
+    )
 
   plot_component_trend <-
     plot_components[[1]] +
@@ -173,16 +177,16 @@ component_analysis <- function(train_tb) {
   plot_component_seasonality <-
     plot_components[[2]] +
     ggplot2::labs(
-      title = train_satellite,
+      title = train_satelite,
       subtitle = "Does the data have a seasonality?",
       x = "Time",
       y = "Number of events"
     )
 
-  plot_model_forescast <-
+  plot_model_forecast <-
     plot(fire_model, fire_forecast) +
     ggplot2::labs(
-      title = train_satellite,
+      title = train_satelite,
       subtitle = "Observations (points) versus forecasting (line)",
       x = "Time",
       y = "Number of events"
@@ -191,7 +195,7 @@ component_analysis <- function(train_tb) {
   return(list(
     plot_component_trend = plot_component_trend,
     plot_component_seasonality = plot_component_seasonality,
-    plot_model_forescast = plot_model_forescast
+    plot_model_forecast = plot_model_forecast
   ))
 }
 
@@ -311,9 +315,18 @@ rm(data_tb_ls)
 
 # Visual test
 for (x in satellite_tb[["data"]]) {
+  x_satellite <- paste(unique(x[["satelite"]]), collapse = "-")
   plot_ls <- visual_test_ts(train_tb = x)
-  for (p in plot_ls)
-    print(p)
+  for (p_name in names(plot_ls)) {
+    print(plot_ls[[p_name]])
+    ggplot2::ggsave(
+      filename = file.path(out_dir, paste0(p_name, "_", x_satellite, ".png")),
+      plot = plot_ls[[p_name]],
+      width = plot_size_a5_ls[["width"]],
+      height = plot_size_a5_ls[["height"]],
+      units = plot_size_a5_ls[["units"]]
+    )
+  }
 }
 
 
@@ -321,9 +334,17 @@ for (x in satellite_tb[["data"]]) {
 #---- Component analysis ----
 
 for (x in satellite_tb[["data"]]) {
+  x_satellite <- paste(unique(x[["satelite"]]), collapse = "-")
   plot_ls <- component_analysis(train_tb = x)
-  for (p in plot_ls)
-    print(p)
+  for (p_name in names(plot_ls))
+    # print(plot_ls[[p_name]])
+    ggplot2::ggsave(
+      filename = file.path(out_dir, paste0(p_name, "_", x_satellite, ".png")),
+      plot = plot_ls[[p_name]],
+      width = plot_size_a5_ls[["width"]],
+      height = plot_size_a5_ls[["height"]],
+      units = plot_size_a5_ls[["units"]]
+    )
 }
 
 
@@ -332,8 +353,16 @@ for (x in satellite_tb[["data"]]) {
 
 for (x in satellite_tb[["data"]]) {
   plot_ls <- test_normal_residuals(train_tb = x)
-  for (p in plot_ls)
-    print(p)
+  x_satellite <- paste(unique(x[["satelite"]]), collapse = "-")
+  for (p_name in names(plot_ls))
+    #print(plot_ls[[p_name]])
+    ggplot2::ggsave(
+      filename = file.path(out_dir, paste0(p_name, "_", x_satellite, ".png")),
+      plot = plot_ls[[p_name]],
+      width = plot_size_a5_ls[["width"]],
+      height = plot_size_a5_ls[["height"]],
+      units = plot_size_a5_ls[["units"]]
+    )
 }
 
 
@@ -342,18 +371,37 @@ for (x in satellite_tb[["data"]]) {
 
 for (x in satellite_tb[["data"]]) {
   x_satellite <- paste(unique(x[["satelite"]]), collapse = "-")
-  print(stats::acf(
-    x$y,
-    main = x_satellite,
-    sub = "Is the time series autocorrelated?",
-    plot = TRUE
-  ))
+  p <- 
+    forecast::ggAcf(
+      x = x[["y"]],
+      lag.max = NULL,
+      type = "correlation",
+      plot = TRUE,
+      na.action = na.contiguous,
+      demean = TRUE
+    ) +
+    ggplot2::labs(
+      title  = x_satellite,
+      subtitle = "Is the time series autocorrelated?",
+      x = "Time",
+      y = "Number of events"
+    )
+  #print(p)
+  ggplot2::ggsave(
+    filename = file.path(
+      out_dir,
+      paste0("plot_autocorrelation", "_", x_satellite, ".png")
+    ),
+    plot = p,
+    width = plot_size_a5_ls[["width"]],
+    height = plot_size_a5_ls[["height"]],
+    units = plot_size_a5_ls[["units"]]
+  )
 }
 
 
 
-#---- Forecast the past ----
-#TODO: Use the model to complete all the time series to the whole time intertal.
+#---- Forecast ----
 
 satellite_tb <-
   satellite_tb %>%
@@ -375,8 +423,8 @@ satellite_tb <-
   )
 
 for (r in seq(nrow(satellite_tb))) {
-  sat_name <- satellite_tb$name[r]
-  p <- 
+  x_satellite <- satellite_tb[[r, "name"]]
+  p <-
     plot(
       satellite_tb$fire_model[[r]],
       satellite_tb$fire_prediction[[r]]
@@ -387,12 +435,18 @@ for (r in seq(nrow(satellite_tb))) {
       x = "Time",
       y = "Number of events"
     )
-    
   print(p)
+  ggplot2::ggsave(
+    filename = file.path(out_dir, paste0("plot_forecast", "_", x_satellite, ".png")),
+    plot = p,
+    width = plot_size_a5_ls[["width"]],
+    height = plot_size_a5_ls[["height"]],
+    units = plot_size_a5_ls[["units"]]
+  )
 }
 
 
 
-
-
 #---- TODO: Compare ----
+#TODO: Compute the residuals by transforming one time series into another and
+# compare the results to the forescast. Does this make sense?
