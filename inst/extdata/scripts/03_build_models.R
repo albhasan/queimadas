@@ -430,7 +430,7 @@ for (r in seq(nrow(satellite_tb))) {
       satellite_tb$fire_prediction[[r]]
     ) +
     ggplot2::labs(
-      title = sat_name,
+      title = x_satellite,
       subtitle = "Model (lines) for the whole time length",
       x = "Time",
       y = "Number of events"
