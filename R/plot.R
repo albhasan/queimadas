@@ -92,7 +92,7 @@ visual_test_ts <- function(train_tb) {
     ) +
     ggplot2::labs(
       title = train_satellite,
-      subtitle = "Does the data have seasonality after MA smoothing?",
+      subtitle = "Do the data have seasonality after MA smoothing?",
       x = "Time",
       y = "Number of events"
     )
@@ -109,7 +109,7 @@ visual_test_ts <- function(train_tb) {
     ) +
     ggplot2::labs(
       title = train_satellite,
-      subtitle = "Does the data have a trend when smoothed?",
+      subtitle = "Do the data have a trend when smoothed?",
       x = "Time",
       y = "Number of events"
     )
@@ -126,7 +126,7 @@ visual_test_ts <- function(train_tb) {
     ) +
     ggplot2::labs(
       title = train_satellite,
-      subtitle = "Does the data have a trend after log(n) and smoothing?",
+      subtitle = "Do the data have a trend after log(n) and smoothing?",
       x = "Time",
       y = "Number of events (log)"
     )
@@ -137,7 +137,6 @@ visual_test_ts <- function(train_tb) {
     plot_trend_smoothing_log = plot_trend_smoothing_log
   ))
 }
-
 
 
 #' Component analysis of time series
@@ -176,7 +175,7 @@ component_analysis <- function(train_tb) {
     plot_components[[1]] +
     ggplot2::labs(
       title = train_satelite,
-      subtitle = "Does the data have a trend?",
+      subtitle = "Do the data have a trend component?",
       x = "Time",
       y = "Number of events"
     )
@@ -185,7 +184,7 @@ component_analysis <- function(train_tb) {
     plot_components[[2]] +
     ggplot2::labs(
       title = train_satelite,
-      subtitle = "Does the data have a seasonality?",
+      subtitle = "Do the data have a seasonality component?",
       x = "Time",
       y = "Number of events"
     )
@@ -205,7 +204,6 @@ component_analysis <- function(train_tb) {
     plot_model_forecast = plot_model_forecast
   ))
 }
-
 
 
 #' Test if the model residuals are normal

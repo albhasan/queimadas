@@ -104,6 +104,7 @@ for (x in satellite_tb[["data"]]) {
 }
 
 
+
 #---- Component analysis ----
 
 for (x in satellite_tb[["data"]]) {
