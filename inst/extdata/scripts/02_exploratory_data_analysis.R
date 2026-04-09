@@ -3,17 +3,24 @@ devtools::load_all()
 
 library(dplyr)
 library(ggplot2)
+library(logger)
 library(lubridate)
 library(readr)
 library(sf)
 library(stringr)
 library(tidyr)
 
+logger::log_threshold(INFO)
+
+logger::log_info("Script 02_exploratory_data_analysis.R starting...")
 
 
 #---- Configuration ----
 
-sqlite_file <- "~/Downloads/fire.sqlite"
+logger::log_info("Reading configuration...")
+
+sqlite_file <- "~/Documents/data/r_packages/queimadas/fire.sqlite"
+
 table_name <- "fire_foci"
 out_dir <- "/home/alber/Documents/github/slides/queimadas/slides/figures"
 
@@ -34,175 +41,97 @@ plot_size_a5_ls <- queimadas::get_paper_size(name = "A5", orientation = "ls")
 plot_size_a4_ls <- queimadas::get_paper_size(name = "A4", orientation = "ls")
 
 
-
-#---- Utilitary functions ----
-
-
-
-# Get the yearly breaklines for figures
-#
-# @description
-# Get the points to insert breaklines in the figures.
-#
-# @param data_tb a tibble.
-#
-# @return a character.
-#
-get_break_lines_year <- function(data_tb) {
-  data_tb %>%
-  dplyr::select(period) %>%
-  dplyr::distinct(period) %>%
-  dplyr::filter(stringr::str_detect(string = period, pattern = "-08$")) %>%
-  dplyr::pull(period) %>%
-  return()
-}
-
-# Filter complete series
-#
-# @description
-# Keep those series with the complete number observations for a period.
-#
-# @param x a tibble with the variables period, satelite, and n.
-# @param n_obs number of observations in a period.
-#
-# @return a modified version of x.
-#
-filter_complete_series <- function(x, n_obs) {
-  # Find satellits' combinations with 12 observations.
-  complete_series <-
-    x %>%
-    dplyr::summarize(
-      n_period = dplyr::n(),
-      .by = tidyselect::all_of(c("satelite_x", "satelite_y"))
-    ) %>%
-    dplyr::filter(n_period >= n_obs) %>%
-    dplyr::select(-n_period) %>%
-    dplyr::mutate(
-      sat_key = stringr::str_c(satelite_x, satelite_y, sep = "-")
-    ) %>%
-    dplyr::select(sat_key)
-  # Filter only series with at least 12 observations.
-  x %>%
-    dplyr::mutate(
-      sat_key = stringr::str_c(satelite_x, satelite_y, sep = "-")
-    ) %>%
-    dplyr::right_join(
-      y = complete_series,
-      by = "sat_key"
-    ) %>%
-    dplyr::select(-sat_key) %>%
-    return()
-}
-
-
-
-# Add the family to which the satelite belongs to
-#
-# @param x a tibble
-#
-# @return x with a new column called sat_family.
-#
-add_sat_family <- function(x) {
-  x %>%
-  dplyr::mutate(
-    sat_family = dplyr::case_when(
-      stringr::str_detect(string = satelite, pattern = "AQUA") ~ "AQUA",
-      stringr::str_detect(string = satelite, pattern = "GOES") ~ "GOES",
-      stringr::str_detect(string = satelite, pattern = "NOAA") ~ "NOAA",
-      stringr::str_detect(string = satelite, pattern = "NPP") ~ "NPP",
-      stringr::str_detect(string = satelite, pattern = "TERRA") ~ "TERRA",
-      .default = "OTHER"
-    )
-  ) %>%
-  return()
-}
-
-
-
 #---- Get the data ----
+
+logger::log_info("Getting the data...")
 
 # Connect to the database.
 db_con <- DBI::dbConnect(RSQLite::SQLite(), dbname = sqlite_file)
 
 
-
 #---- Data: Brazil by year and month ----
 
+logger::log_info("Aggregating Brazilian data by year and month...")
+
 brazil_ym_tb <-
-  db_con %>%
-  get_brazil_year_month (table_name = table_name) %>%
+  db_con |>
+  get_brazil_year_month(table_name = table_name) |>
   dplyr::collect()
 
 # TODO: Check if the AM/PM separation was already done.
 # NOTE: There are only afternoon NPP-375 observations (NPP-375-PM).
-# TODO: What is NPP-375D?
-sats = sort(unique(brazil_ym_tb$satelite))
+# NOTE: In NPP-375D, the D stands for "Diurno".
+sats <- sort(unique(brazil_ym_tb$satelite))
 sats[stringr::str_starts(sats, "NPP")]
 
 
 #---- Table of number of foci in Brazil per year-month and satellite ----
 
+# logger::log_info("Creating aggregation result table...")
 # Save data as CSV.
-# brazil_ym_tb %>%
-#   add_sat_family() %>%
+# brazil_ym_tb |>
+#   add_sat_family() |>
 #   tidyr::pivot_wider(
 #     names_from = satelite,
 #     values_from = n,
 #     names_repair = "universal"
-#   ) %>%
-#   dplyr::select(order(colnames(.))) %>%
-#   dplyr::relocate(period) %>%
-#   dplyr::arrange(period) %>%
+#   ) |>
+#   dplyr::select(order(colnames(.))) |>
+#   dplyr::relocate(period) |>
+#   dplyr::arrange(period) |>
 #   readr::write_csv(
 #     file = file.path(out_dir, "brasil_satellite_year_month.csv")
 #   )
 
 
-
 #---- Get satellite pairs for analysis ----
 
-sat_tb <- 
-  brazil_ym_tb %>%
-  get_sat_pairs(satellites = ref_satellite)
+logger::log_info("Getting satellite pairs for analysis...")
 
+sat_tb <-
+  brazil_ym_tb |>
+  get_sat_pairs(satellites = ref_satellite)
 
 
 #---- Plot foci for every combination of satellites by year and month in Brazil ----
 
-# Brazil data by month (no year).
+logger::log_info("Aggregating data by month (no year)...")
 brazil_m_tb <-
-  db_con %>%
-  get_brazil_month(table_name = table_name) %>%
+  db_con |>
+  get_brazil_month(table_name = table_name) |>
   dplyr::collect()
 
-# Plot of points of montly data (no year) in Brazil with regression lines.
+logger::log_info(
+  "Plotting montly data (no year) and their regression lines..."
+)
+
 plot_lm_brazil_month <-
-  sat_tb %>%
+  sat_tb |>
   dplyr::left_join(
     y = brazil_m_tb,
     by = c("satelite_x" = "satelite"),
     suffix = c("", "_x"),
     relationship = "many-to-many"
-  ) %>%
+  ) |>
   dplyr::left_join(
     y = brazil_m_tb,
     by = c("satelite_y" = "satelite"),
     suffix = c("", "_y"),
     relationship = "many-to-many"
-  ) %>%
+  ) |>
   dplyr::rename(
     "period_x" = "period",
     "n_x" = "n"
-  ) %>%
-  dplyr::filter(period_x == period_y) %>%
-  dplyr::select(-period_y) %>%
-  dplyr::rename("period" = "period_x") %>%
+  ) |>
+  dplyr::filter(period_x == period_y) |>
+  dplyr::select(-period_y) |>
+  dplyr::rename("period" = "period_x") |>
   dplyr::mutate(
     period = as.integer(period),
     period = as.factor(period)
-  ) %>%
-  filter_complete_series(n_obs = 12) %>%
-  dplyr::arrange(satelite_x, satelite_y, period) %>%
+  ) |>
+  filter_complete_series(n_obs = 12) |>
+  dplyr::arrange(satelite_x, satelite_y, period) |>
   ggplot2::ggplot(
     mapping = ggplot2::aes(
       x = n_x,
@@ -244,26 +173,30 @@ ggplot2::ggsave(
 )
 
 
-
 #---- Plot of correlation in montly data (no year) in Brazil ----
 
-cor_data <- 
-  brazil_m_tb %>%
-  dplyr::filter(satelite %in% ref_satellite) %>%
+logger::log_info("Estimating correlation among monthly data (no year)...")
+
+cor_data <-
+  brazil_m_tb |>
+  dplyr::filter(satelite %in% ref_satellite) |>
   tidyr::pivot_wider(
     names_from = satelite,
     values_from = n,
     names_repair = "universal"
-  ) %>%
-  dplyr::select(order(colnames(.))) %>%
-  dplyr::relocate(period) %>%
-  dplyr::arrange(period) %>%
+  ) %>% # NOTE: Use magrittr's pipe to enable the "."" in the next line.
+  dplyr::select(order(colnames(.))) |>
+  dplyr::relocate(period) |>
+  dplyr::arrange(period) |>
   dplyr::select(-period)
 
 cor_mt <- stats::cor(cor_data)
 min_cor <- min(cor_mt, na.rm = TRUE)
 cor_mt[is.na(cor_mt)] <- 0
 
+logger::log_info(
+  "Plotting correlations between time series from different satellites..."
+)
 plot_cor_brazil_month <-
   ggcorrplot::ggcorrplot(
     corr = cor_mt,
@@ -274,9 +207,9 @@ plot_cor_brazil_month <-
     hc.order = TRUE
   ) +
   scale_fill_gradient2(
-    limit = c(min_cor ,1),
+    limit = c(min_cor, 1),
     low = "blue",
-    high =  "red",
+    high = "red",
     mid = "white",
     midpoint = 0.85
   )
@@ -289,19 +222,67 @@ ggplot2::ggsave(
   units = plot_size_a5_ls[["units"]]
 )
 
+logger::log_info(
+  "Writing table of overlapping-satellite correlations..."
+)
+
+ref_satellite |>
+  utils::combn(m = 2) |>
+  t() |>
+  data.frame() |>
+  magrittr::set_colnames(value = c("satelite_x", "satelite_y")) |>
+  dplyr::mutate(
+    cor_val = purrr::map2(
+      .x = satelite_x,
+      .y = satelite_y,
+      .f = function(x, y, data_tb) {
+        x_df <- dplyr::filter(data_tb, satelite == x)
+        y_df <- dplyr::filter(data_tb, satelite == y)
+        xy_df <- dplyr::inner_join(x_df, y_df, by = "period")
+        if (nrow(xy_df) == 0) {
+          return(NA)
+        }
+        return(
+          round(
+            x = cor(
+              x = xy_df[["n.x"]],
+              y = xy_df[["n.y"]],
+              use = "everything",
+              method = "pearson"
+            ),
+            digits = 3
+          )
+        )
+      },
+      data_tb = brazil_ym_tb
+    )
+  ) |>
+  dplyr::filter(!is.na(cor_val)) |>
+  get_latex_char() |>
+  readr::write_csv(
+    file = file.path(
+      dirname(out_dir),
+      "tables",
+      "correlation_overlapping_ts.csv"
+    )
+  )
 
 
 #---- Line plot ----
 
-# Break lines at Auguts of each year in the data.
+logger::log_info("Line plots...")
 
-
-
-break_lines <- get_break_lines_year(data_tb = brazil_ym_tb)
+logger::log_info("Creaing break lines on August of each year...")
+break_lines <-
+  get_break_lines_year(
+    data_tb = brazil_ym_tb,
+    period_col = "period",
+    break_pattern = "-08$"
+  )
 
 plot_line_brazil_year_month <-
-  brazil_ym_tb %>%
-  dplyr::filter(satelite %in% ref_satellite) %>%
+  brazil_ym_tb |>
+  dplyr::filter(satelite %in% ref_satellite) |>
   ggplot2::ggplot() +
   ggplot2::geom_line(ggplot2::aes(
     x = period,
@@ -331,61 +312,66 @@ ggplot2::ggsave(
 )
 
 
-
 #---- Brazil data by state, year and month ----
 
+logger::log_info("Aggregating Brazilian data by state, year, and month...")
+
 brstate_tb <-
-  queimadas::brstate_tb %>%
-  dplyr::select(estado = name_state, region = name_region) %>%
+  queimadas::brstate_tb |>
+  dplyr::select(estado = name_state, region = name_region) |>
   dplyr::mutate(
     estado = toupper(estado),
     estado = stringi::stri_trans_general(str = estado, id = "Latin-ASCII")
   )
 
 brazil_state_ym_tb <-
-  db_con %>%
-  get_brazil(table_name = table_name) %>%
-  dplyr::select(data_pas, satelite, estado) %>%
-  dplyr::filter(satelite %in% ref_satellite) %>%
+  db_con |>
+  get_brazil(table_name = table_name) |>
+  dplyr::select(data_pas, satelite, estado) |>
+  dplyr::filter(satelite %in% ref_satellite) |>
   dplyr::mutate(
-      period = stringr::str_sub(string = data_pas, start = 1L, end = 7L)
-  ) %>%
+    period = stringr::str_sub(string = data_pas, start = 1L, end = 7L)
+  ) |>
   dplyr::summarize(
     n = dplyr::n(),
     .by = tidyselect::all_of(x = c("period", "satelite", "estado"))
-  ) %>%
-  dplyr::arrange(period, satelite, estado) %>%
+  ) |>
+  dplyr::arrange(period, satelite, estado) |>
   dplyr::collect()
 
 brazil_region_ym_tb <-
-  brazil_state_ym_tb %>%
+  brazil_state_ym_tb |>
   dplyr::mutate(
     estado = toupper(estado),
     estado = stringi::stri_trans_general(str = estado, id = "Latin-ASCII")
-  ) %>%
+  ) |>
   dplyr::left_join(
     y = brstate_tb,
     by = "estado"
-  ) %>%
+  ) |>
   dplyr::summarize(
     n = sum(n),
     .by = tidyselect::all_of(x = c("period", "satelite", "region"))
   )
 
-break_lines <- get_break_lines_year(data_tb = brazil_ym_tb)
-
+logger::log_info("Creating line plots of Brazil by region, year, and month...")
 plot_line_brazil_state_year_month <-
-  brazil_region_ym_tb %>%
+  brazil_region_ym_tb |>
   dplyr::mutate(
     sat_family = dplyr::case_when(
-      stringr::str_detect(string = satelite, pattern = "AQUA") ~ "AQUA-NOAA-NPP",
-      stringr::str_detect(string = satelite, pattern = "NOAA") ~ "AQUA-NOAA-NPP",
-      stringr::str_detect(string = satelite, pattern = "NPP") ~  "AQUA-NOAA-NPP",
-      stringr::str_detect(string = satelite, pattern = "GOES") ~ "GOES",
-      stringr::str_detect(string = satelite, pattern = "TERRA") ~ "TERRA",
+      stringr::str_detect(string = satelite, pattern = "AQUA")
+      ~ "AQUA-NOAA-NPP",
+      stringr::str_detect(string = satelite, pattern = "NOAA")
+      ~ "AQUA-NOAA-NPP",
+      stringr::str_detect(string = satelite, pattern = "NPP")
+      ~ "AQUA-NOAA-NPP",
+      stringr::str_detect(string = satelite, pattern = "GOES")
+      ~ "GOES",
+      stringr::str_detect(string = satelite, pattern = "TERRA")
+      ~ "TERRA",
       .default = "OTHER"
     )
-  ) %>%
+  ) |>
   ggplot2::ggplot() +
   ggplot2::geom_line(ggplot2::aes(
     x = period,
@@ -408,13 +394,15 @@ plot_line_brazil_state_year_month <-
 ggplot2::ggsave(
   filename = file.path(out_dir, "plot_line_brazil_region_year_month.png"),
   plot = plot_line_brazil_state_year_month,
-  width = plot_size_a4_ls[["width"]],
-  height = plot_size_a4_ls[["height"]],
+  width = plot_size_a4_ls[["height"]],
+  height = plot_size_a4_ls[["width"]],
   units = plot_size_a4_ls[["units"]]
 )
 
-
-
 #---- Disconnect from the database ----
 
+logger::log_info("Disconnecting from the database...")
+
 DBI::dbDisconnect(conn = db_con)
+
+logger::log_info("Script 02_exploratory_data_analysis.R finished!")
