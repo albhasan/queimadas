@@ -7,13 +7,10 @@ library(purrr)
 library(tibble)
 library(lubridate)
 
-# library(httpgd)
-# httpgd::hgd()
-
 
 #---- Configuration ----
 
-sqlite_file <- "~/Downloads/fire.sqlite"
+sqlite_file <- "~/Documents/data/r_packages/queimadas/fire.sqlite"
 table_name <- "fire_foci"
 out_dir <- "/home/alber/Documents/github/slides/queimadas/slides/figures"
 
@@ -104,14 +101,12 @@ for (x in satellite_tb[["data"]]) {
 }
 
 
-
 #---- Component analysis ----
 
 for (x in satellite_tb[["data"]]) {
   x_satellite <- paste(unique(x[["satelite"]]), collapse = "-")
   plot_ls <- component_analysis(train_tb = x)
   for (p_name in names(plot_ls)) {
-    # print(plot_ls[[p_name]])
     ggplot2::ggsave(
       filename = file.path(out_dir, paste0(p_name, "_", x_satellite, ".png")),
       plot = plot_ls[[p_name]],
@@ -129,7 +124,6 @@ for (x in satellite_tb[["data"]]) {
   plot_ls <- test_normal_residuals(train_tb = x)
   x_satellite <- paste(unique(x[["satelite"]]), collapse = "-")
   for (p_name in names(plot_ls)) {
-    # print(plot_ls[[p_name]])
     ggplot2::ggsave(
       filename = file.path(out_dir, paste0(p_name, "_", x_satellite, ".png")),
       plot = plot_ls[[p_name]],
@@ -160,7 +154,7 @@ for (x in satellite_tb[["data"]]) {
       x = "Time",
       y = "Number of events"
     )
-  # print(p)
+
   ggplot2::ggsave(
     filename = file.path(
       out_dir,
