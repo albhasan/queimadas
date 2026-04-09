@@ -20,12 +20,11 @@
 #'
 download_data <- function(out_dir, data_url = get_data_url(), wait_time = 5,
                           overwrite_files = FALSE, quiet = FALSE) {
-
   stopifnot("Output directory not found!" = dir.exists(out_dir))
 
   # Get the zip names.
   zip_names <-
-    url |>
+    data_url |>
     rvest::read_html() |>
     rvest::html_nodes(xpath = ".//a[contains(@href, '.zip')]") |>
     rvest::html_attr("href")
@@ -35,12 +34,13 @@ download_data <- function(out_dir, data_url = get_data_url(), wait_time = 5,
     file.path(data_url, zip_names)
 
   # Download.
-  zip_files <- 
+  zip_files <-
     purrr::walk(
-      .x = zip_urls, 
-      .f = ~{
-        if (!quiet)
+      .x = zip_urls,
+      .f = ~ {
+        if (!quiet) {
           message("Downloading: ", .x)
+        }
         httr::GET(
           url = .x,
           httr::write_disk(
@@ -55,9 +55,7 @@ download_data <- function(out_dir, data_url = get_data_url(), wait_time = 5,
   return(
     file.path(out_dir, basename(zip_files))
   )
-
 }
-
 
 
 #' Get the data URL
@@ -70,11 +68,8 @@ download_data <- function(out_dir, data_url = get_data_url(), wait_time = 5,
 #' @export
 #'
 get_data_url <- function() {
-  #NOTE: This directory includes data from all the satellites only for Brazil.
-  #NOTE: Data for south America includes only the reference satellite and it
+  # NOTE: This directory includes data from all the satellites only for Brazil.
+  # NOTE: Data for south America includes only the reference satellite and it
   # is a couple of leves up from Brazil's data.
   return("https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/anual/Brasil_todos_sats")
 }
-
-
-

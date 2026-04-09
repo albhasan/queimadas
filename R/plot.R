@@ -61,7 +61,6 @@ get_plot_forecast_vs_obs <- function(obs_tb, forecast_tb) {
 }
 
 
-
 #' Visual test of time series
 #'
 #' @description
@@ -262,4 +261,117 @@ test_normal_residuals <- function(train_tb) {
     plot_residuals = plot_residuals,
     plot_residuals_hist = plot_residuals_hist
   ))
+}
+
+
+#' Plot the results of the Queimadas method
+#'
+#' @description
+#' Plot the results of applying the Queimadas method. This method consists on
+#' finding the time overlap between two time series of observations and
+#' adjust a linear model using the montly, but not the yearly, aggregated data.
+#' Then, the results of this allows to obtain for each `x` observation the
+#' estimatd `y` value for the time extent of `x`.
+#'
+#' @param x_df a data frame. The data on which `y` would be estimated.
+#' @param y_df a data frame. The data used to fit a linear model on the
+#' temporal overlaping with `x_df`
+#' @param forecast_df a data frame. The results of projecting y for the time
+#' extent of x.
+#'
+#' @return a plot object (ggplot2).
+#'
+#' @export
+#'
+plot_queimadas_forecast <- function(x_df, y_df, forecast_df) {
+  period <- n <- NULL
+
+  f_line_color <- "blue"
+  f_line_type <- "solid"
+  f_line_width <- 0.4
+  f_point_color <- "blue"
+  f_point_shape <- "circle"
+  f_point_size <- 2
+
+  x_line_color <- "black"
+  x_line_width <- 0.2
+  x_line_type <- "dotted"
+  x_point_color <- "black"
+  x_point_shape <- "plus"
+  x_point_size <- 1
+
+  y_line_color <- "red"
+  y_line_width <- 0.2
+  y_line_type <- "dashed"
+
+  y_point_shape <- "cross"
+  y_point_color <- "red"
+  y_point_size <- 1
+
+  p <-
+    ggplot2::ggplot() +
+    ggplot2::geom_line(
+      mapping = ggplot2::aes(
+        x = period,
+        y = n,
+        group = 1
+      ),
+      color = f_line_color,
+      linewidth = f_line_width,
+      linetype = f_line_type,
+      data = forecast_df
+    ) +
+    ggplot2::geom_point(
+      mapping = ggplot2::aes(
+        x = period,
+        y = n
+      ),
+      color = f_point_color,
+      shape = f_point_shape,
+      size = f_point_size,
+      data = forecast_df
+    ) +
+    ggplot2::geom_line(
+      mapping = ggplot2::aes(
+        x = period,
+        y = n,
+        group = 1
+      ),
+      color = x_line_color,
+      linewidth = x_line_width,
+      linetype = x_line_type,
+      data = x_df
+    ) +
+    ggplot2::geom_point(
+      mapping = ggplot2::aes(
+        x = period,
+        y = n
+      ),
+      color = x_point_color,
+      shape = x_point_shape,
+      size = x_point_size,
+      data = x_df
+    ) +
+    ggplot2::geom_line(
+      mapping = ggplot2::aes(
+        x = period,
+        y = n,
+        group = 1
+      ),
+      color = y_line_color,
+      linewidth = y_line_width,
+      linetype = y_line_type,
+      data = y_df
+    ) +
+    ggplot2::geom_point(
+      mapping = ggplot2::aes(
+        x = period,
+        y = n
+      ),
+      color = y_point_color,
+      shape = y_point_shape,
+      size = y_point_size,
+      data = y_df
+    )
+  return(p)
 }

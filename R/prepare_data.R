@@ -15,20 +15,21 @@
 #' @export
 #'
 get_brazil <- function(db_con, table_name) {
-  #TODO: Remove magrittr dependency!
   id_area_industrial <- data_pas <- pais <- NULL
-  db_con %>%
-  dplyr::tbl(table_name) %>%
-  dplyr::filter(
-    pais == "Brasil",
-    id_area_industrial == "0"
-  ) %>%
-  dplyr::mutate(
-    afternoon = lubridate::hour(lubridate::as_datetime(data_pas)) >= 12
-  ) %>%
-  return()
-}
 
+  res <-
+    db_con |>
+    dplyr::tbl(table_name) |>
+    dplyr::filter(
+      pais == "Brasil",
+      id_area_industrial == "0"
+    ) |>
+    dplyr::mutate(
+      afternoon = lubridate::hour(lubridate::as_datetime(data_pas)) >= 12
+    )
+
+  return(res)
+}
 
 
 #' Get fire data from Brazil by year and month
@@ -48,32 +49,32 @@ get_brazil <- function(db_con, table_name) {
 #' @export
 #'
 get_brazil_year_month <- function(db_con, table_name) {
-  #TODO: Remove magrittr dependency!
   afternoon <- data_pas <- satelite <- period <- NULL
-  db_con %>%
-  get_brazil(table_name = table_name) %>%
-   dplyr::mutate(
-     period = stringr::str_sub(string = data_pas, start = 1L, end = 7L),
-     satelite = dplyr::if_else(
-       condition = satelite == "NPP-375" & afternoon == 1,
-       true = "NPP-375-PM",
-       false = satelite
-     ),
-     satelite = dplyr::if_else(
-       condition = satelite == "NPP-375" & afternoon == 0,
-       true = "NPP-375-AM",
-       false = satelite
-     )
-   ) %>%
-  dplyr::select(satelite, period) %>%
-  dplyr::summarize(
-    n = dplyr::n(),
-    .by = tidyselect::all_of(x = c("period", "satelite"))
-  ) %>%
-  dplyr::arrange(period, satelite) %>%
-  return()
-}
 
+  res <-
+    db_con |>
+    get_brazil(table_name = table_name) |>
+    dplyr::mutate(
+      period = stringr::str_sub(string = data_pas, start = 1L, end = 7L),
+      satelite = dplyr::if_else(
+        condition = satelite == "NPP-375" & afternoon == 1,
+        true = "NPP-375-PM",
+        false = satelite
+      ),
+      satelite = dplyr::if_else(
+        condition = satelite == "NPP-375" & afternoon == 0,
+        true = "NPP-375-AM",
+        false = satelite
+      )
+    ) |>
+    dplyr::select(satelite, period) |>
+    dplyr::summarize(
+      n = dplyr::n(),
+      .by = tidyselect::all_of(x = c("period", "satelite"))
+    )
+
+  return(res)
+}
 
 
 #' Get fire data from Brazil by month
@@ -93,22 +94,20 @@ get_brazil_year_month <- function(db_con, table_name) {
 #' @export
 #'
 get_brazil_month <- function(db_con, table_name) {
-  #TODO: Remove magrittr dependency!
   n <- period <- NULL
-  #brazil_m_tb <-
-  #brazil_ym_tb %>%
-  db_con %>%
-  get_brazil_year_month (table_name = table_name) %>%
-  dplyr::mutate(
+  res <-
+    db_con |>
+    get_brazil_year_month(table_name = table_name) |>
+    dplyr::mutate(
       period = stringr::str_sub(string = period, start = 6L, end = 7L)
-  ) %>%
-  dplyr::summarize(
-    n = sum(n, na.rm = FALSE),
-    .by = tidyselect::all_of(x = c("period", "satelite"))
-  ) %>% 
-  return()
-}
+    ) |>
+    dplyr::summarize(
+      n = sum(n, na.rm = FALSE),
+      .by = tidyselect::all_of(x = c("period", "satelite"))
+    )
 
+  return(res)
+}
 
 
 #' Get pairs of satellites for analysis
@@ -127,23 +126,25 @@ get_brazil_month <- function(db_con, table_name) {
 #' @export
 #'
 get_sat_pairs <- function(data_tb, satellites) {
-  stopifnot("Candidate names not found in satellites!" =
-            "candidate" %in% names(satellites))
+  stopifnot(
+    "Candidate names not found in satellites!" =
+      "candidate" %in% names(satellites)
+  )
 
   satelite <- satelite_x <- satelite_y <- NULL
   . <- NULL
 
-  #TODO: Remove magrittr dependency!
+  # TODO: Remove magrittr dependency!
   data_tb %>%
-  dplyr::select(satelite) %>%
-  dplyr::distinct(satelite) %>%
-  dplyr::filter(satelite %in% satellites) %>%
-  dplyr::pull(satelite) %>%
-  tidyr::expand_grid(satelite_x = ., satelite_y = .) %>%
-  dplyr::filter(
-    satelite_x != satelite_y,
-    satelite_y %in% satellites[names(satellites) == "candidate"]
-  ) %>%
-  dplyr::arrange(satelite_y) %>%
-  return()
+    dplyr::select(satelite) %>%
+    dplyr::distinct(satelite) %>%
+    dplyr::filter(satelite %in% satellites) %>%
+    dplyr::pull(satelite) %>%
+    tidyr::expand_grid(satelite_x = ., satelite_y = .) %>%
+    dplyr::filter(
+      satelite_x != satelite_y,
+      satelite_y %in% satellites[names(satellites) == "candidate"]
+    ) %>%
+    dplyr::arrange(satelite_y) %>%
+    return()
 }
