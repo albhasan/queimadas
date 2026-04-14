@@ -283,8 +283,8 @@ test_normal_residuals <- function(train_tb) {
 #'
 #' @export
 #'
-plot_queimadas_forecast <- function(x_df, y_df, forecast_df) {
-  period <- n <- NULL
+get_plot_queimadas_forecast <- function(x_df, y_df, forecast_df) {
+  fit <- lwr <- period_date <- upr <- n <- NULL
 
   f_line_color <- "blue"
   f_line_type <- "solid"
@@ -308,12 +308,26 @@ plot_queimadas_forecast <- function(x_df, y_df, forecast_df) {
   y_point_color <- "red"
   y_point_size <- 1
 
+  forecast_df["period_date"] <- period_to_date(forecast_df[["period"]])
+  x_df["period_date"] <- period_to_date(x_df[["period"]])
+  y_df["period_date"] <- period_to_date(y_df[["period"]])
+
   p <-
     ggplot2::ggplot() +
+    # Shadow: confidence interval.
+    ggplot2::geom_ribbon(
+      mapping = ggplot2::aes(
+        x = period_date,
+        ymin = lwr,
+        ymax = upr,
+      ),
+      fill = "gray80",
+      data = forecast_df
+    ) +
     ggplot2::geom_line(
       mapping = ggplot2::aes(
-        x = period,
-        y = n,
+        x = period_date,
+        y = fit,
         group = 1
       ),
       color = f_line_color,
@@ -321,19 +335,21 @@ plot_queimadas_forecast <- function(x_df, y_df, forecast_df) {
       linetype = f_line_type,
       data = forecast_df
     ) +
+    # Forecast points.
     ggplot2::geom_point(
       mapping = ggplot2::aes(
-        x = period,
-        y = n
+        x = period_date,
+        y = fit
       ),
       color = f_point_color,
       shape = f_point_shape,
       size = f_point_size,
       data = forecast_df
     ) +
+    # X line.
     ggplot2::geom_line(
       mapping = ggplot2::aes(
-        x = period,
+        x = period_date,
         y = n,
         group = 1
       ),
@@ -342,9 +358,10 @@ plot_queimadas_forecast <- function(x_df, y_df, forecast_df) {
       linetype = x_line_type,
       data = x_df
     ) +
+    # X points.
     ggplot2::geom_point(
       mapping = ggplot2::aes(
-        x = period,
+        x = period_date,
         y = n
       ),
       color = x_point_color,
@@ -352,9 +369,10 @@ plot_queimadas_forecast <- function(x_df, y_df, forecast_df) {
       size = x_point_size,
       data = x_df
     ) +
+    # Y line.
     ggplot2::geom_line(
       mapping = ggplot2::aes(
-        x = period,
+        x = period_date,
         y = n,
         group = 1
       ),
@@ -363,9 +381,10 @@ plot_queimadas_forecast <- function(x_df, y_df, forecast_df) {
       linetype = y_line_type,
       data = y_df
     ) +
+    # Y points.
     ggplot2::geom_point(
       mapping = ggplot2::aes(
-        x = period,
+        x = period_date,
         y = n
       ),
       color = y_point_color,
@@ -373,5 +392,83 @@ plot_queimadas_forecast <- function(x_df, y_df, forecast_df) {
       size = y_point_size,
       data = y_df
     )
+
+  return(p)
+}
+
+
+#' Get a regression plot between reference satellites
+#'
+#' @description
+#' Get a ggplot2 plot which compares a reference satellite observations.
+#'
+#' @param x,y a character(1). Name of a reference satellite.
+#' @param data_df a data frame with overlapping observations of reference
+#' satellites.
+#' @param lm_obj a regression object (see `stats::lm`).
+#'
+#' @return A plot (ggplot2) object.
+#'
+get_plot_ref_sats <- function(x, y, data_df, lm_obj) {
+  fit <- is_outlier <- lwr <- m <- upr <- NULL
+  stopifnot(
+    "Required columns not found!" =
+      c("fit", "is_outlier", "lwr", "m", "upr") %in% colnames(data_df)
+  )
+  p <-
+    ggplot2::ggplot(data = data_df) +
+    # Shadow: Confidence interval.
+    ggplot2::geom_ribbon(
+      mapping = ggplot2::aes(
+        x = x,
+        ymin = lwr,
+        ymax = upr,
+      ),
+      fill = "gray80"
+    ) +
+    # Points: y ~ x.
+    ggplot2::geom_point(
+      mapping = ggplot2::aes(
+        x = x,
+        y = y,
+        color = m,
+        shape = is_outlier
+      )
+    ) +
+    # Line: yhat ~ x.
+    ggplot2::geom_line(
+      mapping = ggplot2::aes(
+        x = x,
+        y = fit
+      ),
+      color = "blue"
+    ) +
+    # Line y = x.
+    ggplot2::geom_abline(
+      intercept = 0,
+      slope = 1,
+      linetype = "dashed"
+    ) +
+    ggplot2::geom_text(
+      mapping = ggplot2::aes(
+        x = range(x)[1],
+        y = range(y)[2],
+        hjust = 0,
+        vjust = 1,
+        label = sprintf(
+          "%s\nr2 = %s",
+          get_lm_equation(lm_obj, dig = 2),
+          round(get_lm_r2(lm_obj), digits = 2)
+        ),
+        parse = TRUE
+      )
+    ) +
+    ggplot2::xlab(x) +
+    ggplot2::ylab(y) +
+    ggplot2::labs(
+      colour = "Month",
+      shape = "Outlier"
+    )
+
   return(p)
 }
