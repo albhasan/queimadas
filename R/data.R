@@ -14,3 +14,21 @@
 #' }
 #' @source <https://cran.r-project.org/package=geobr>
 "brstate_tb"
+
+#' Grid used for spatial aggregation
+#'
+#' This is the reference grid used for the spatial aggregation of data during
+#' analysis.
+#'
+#' @format ## `grid_sf`
+#' A data frame with 988 rows and 6 columns:
+#' \describe{
+#'   \item{id}{Identifier.}
+#'   \item{gid}{Geometry identifier}
+#'   \item{path_row}{Identifier build using the relative location of the cell in the grid.}
+#'   \item{orbita}{Path as an integer.}
+#'   \item{ponto}{Row as an integer.}
+#'   \item{geom}{Geometry.}
+#' }
+#'
+"grid_sf"
