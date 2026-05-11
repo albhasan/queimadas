@@ -1,5 +1,4 @@
-library(devtools)
-devtools::load_all()
+library(queimadas)
 
 library(dplyr)
 library(forecast)

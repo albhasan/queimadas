@@ -1,6 +1,6 @@
-library(devtools)
-devtools::load_all()
+library(queimadas)
 
+library(bfast)
 library(dplyr)
 library(ggplot2)
 library(logger)
@@ -43,9 +43,9 @@ plot_size_a4_ls <- queimadas::get_paper_size(name = "A4", orientation = "ls")
 
 #---- Get the data ----
 
-logger::log_info("Getting the data...")
+logger::log_info("Getting data...")
 
-# Connect to the database.
+logger::log_info("Connecting to the database...")
 db_con <- DBI::dbConnect(RSQLite::SQLite(), dbname = sqlite_file)
 
 
@@ -399,10 +399,89 @@ ggplot2::ggsave(
   units = plot_size_a4_ls[["units"]]
 )
 
+
+#---- BFast analysis ----
+
+logger::log_info("Running BFast analysis...")
+
+bfast_tb <-
+  brazil_ym_tb |>
+  dplyr::filter(satelite %in% ref_satellite) |>
+  dplyr::mutate(
+    ymd = stringr::str_c(period, "-15"),
+    ymd = lubridate::as_date(ymd)
+  ) |>
+  dplyr::select(ymd, n, satelite) |>
+  tidyr::nest(.by = satelite) |>
+  dplyr::mutate(
+    ts = purrr::map(
+      .x = data,
+      .f = function(data_tb) {
+        # NOTE: BFast demand data to have at least two periods.
+        if (nrow(data_tb) < 25) {
+          return(NA)
+        }
+        # NOTE: BFast demand data to be periodic.
+        data_tb <- data_tb[1:(nrow(data_tb) %/% 12 * 12), ]
+        ts_obj <- stats::ts(
+          data = data_tb[["n"]],
+          frequency = 12,
+          start = c(year(data_tb[[1, "ymd"]]), month(data_tb[[1, "ymd"]])),
+          end = c(
+            year(data_tb[[nrow(data_tb), "ymd"]]),
+            month(data_tb[[nrow(data_tb), "ymd"]])
+          )
+        )
+        return(ts_obj)
+      }
+    )
+  ) |>
+  dplyr::mutate(
+    bf = purrr::map(
+      .x = ts,
+      .f = function(x) {
+        if (length(x) == 1 && is.na(x)) {
+          return(NA)
+        }
+        if (length(x) < 24) {
+          return(NA)
+        }
+        bfast::bfast(
+          Yt = x,
+          season = "harmonic",
+          max.iter = 10
+        )
+      }
+    )
+  )
+
+logger::log_info("Saving BFast plots to disk...")
+
+for (i in seq_len(nrow(bfast_tb))) {
+  sat_name <- bfast_tb[["satelite"]][[i]]
+  filename <- file.path(
+    out_dir,
+    paste0("plot_bfast_brazil_year_month_", sat_name, ".png")
+  )
+  bf_obj <- bfast_tb[["bf"]][[i]]
+  if (!all(is.na(bf_obj))) {
+    logger::log_info("Saving BFast plot to ", basename(filename), "...")
+    grDevices::png(
+      filename = filename,
+      width = plot_size_a5_ls[["width"]],
+      height = plot_size_a5_ls[["height"]],
+      units = plot_size_a5_ls[["units"]],
+      res = 72
+    )
+    plot(bf_obj)
+    dev.off()
+  }
+}
+
+
 #---- Disconnect from the database ----
 
 logger::log_info("Disconnecting from the database...")
-
 DBI::dbDisconnect(conn = db_con)
 
 logger::log_info("Script 02_exploratory_data_analysis.R finished!")

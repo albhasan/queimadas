@@ -89,3 +89,25 @@ get_month_from_period <- function(x) {
     )
   )
 }
+
+
+
+#' Extract the year from the period
+#'
+#' @description
+#' Given a period (e.g. "2028-07"), get the year ("2028").
+#'
+#' @param x a character representing an aggregation period (e.g. "2028-07").
+#'
+#' @return a character. A year.
+#'
+get_year_from_period <- function(x) {
+  stopifnot("Invalid period!" = is_period_valid(x))
+  return(
+    substr(
+      x = x,
+      start = 1L,
+      stop = 4L
+    )
+  )
+}

@@ -25,7 +25,6 @@ test_that("period_to_date and date_to_period works", {
   )
 })
 
-
 test_that("get_month_from_period works", {
   expect_equal(
     object = get_month_from_period(x = "2008-07"),
@@ -42,4 +41,22 @@ test_that("get_month_from_period works", {
   expect_error(object = get_month_from_period(x = 189L))
   expect_error(object = get_month_from_period(x = NA_character_))
   expect_error(object = get_month_from_period(x = character()))
+})
+
+test_that("get_year_from_period works", {
+  expect_equal(
+    object = get_year_from_period(x = "2008-07"),
+    expected = "2008"
+  )
+  expect_equal(
+    object = get_year_from_period(x = c("2008-07", "2007-01")),
+    expected = c("2008", "2007")
+  )
+  expect_error(object = get_year_from_period(x = "2008"))
+  expect_error(object = get_year_from_period(x = "20081-02342"))
+  expect_error(object = get_year_from_period(x = "200808"))
+  expect_error(object = get_year_from_period(x = c("2008-08", "2006")))
+  expect_error(object = get_year_from_period(x = 189L))
+  expect_error(object = get_year_from_period(x = NA_character_))
+  expect_error(object = get_year_from_period(x = character()))
 })
