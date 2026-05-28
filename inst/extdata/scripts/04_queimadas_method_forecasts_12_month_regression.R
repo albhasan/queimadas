@@ -33,7 +33,7 @@ rm(db_con)
 #---- Util ----
 
 # Utilitary. Plot the regression lines of the month models.
-get_plot_lm_01 <- function(plot_data) {}
+# TODO: get_plot_lm_01 <- function(plot_data) {}
 
 #---- Forecast using the queimadas approach ----
 
@@ -42,6 +42,19 @@ sat_char <- c(
   "NOAA-12",
   "NPP-375-PM",
   "NPP-375D"
+)
+
+# TODO: Add to figures!
+# https://space.oscar.wmo.int/satellites/view/aqua
+# https://space.oscar.wmo.int/satellites/view/noaa_12
+# https://space.oscar.wmo.int/satellites/view/terra
+# https://space.oscar.wmo.int/satellites/view/snpp
+sat_metadata <- tibble::tribble(
+  ~name,     ~launch,      ~elo,
+  "AQUA",    "2002-05-04", ">2026",
+  "TERRA",   "1999-12-18", ">2026",
+  "NOAA-12", "1991-05-12", "2007-08-10",
+  "SNPP",    "2011-10-28", ">2029"
 )
 
 stopifnot(
@@ -404,7 +417,6 @@ for (i in seq_len(nrow(sat_tb))) {
         sat_y, sat_x
       )
     )
-
   plot_file <- file.path(
     out_dir,
     "figures",
@@ -444,7 +456,6 @@ for (i in seq_len(nrow(sat_tb))) {
         sat_y, sat_x
       )
     )
-
   plot_file <- file.path(
     out_dir,
     "figures",

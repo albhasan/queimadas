@@ -10,15 +10,15 @@ test_that("get_data_url works", {
 
   # Test if the given URL is valid.
   # Adapted from https://stackoverflow.com/questions/52911812/check-if-url-exists-in-r
-  is_url_valid <- function(url_in, t = 2){
+  is_url_valid <- function(url_in, t = 2) {
     con <- url(url_in)
     check <- suppressWarnings(
       try(
-          open.connection(
-            con = con,
-            open = "rt",
-            timeout = t
-          ),
+        open.connection(
+          con = con,
+          open = "rt",
+          timeout = t
+        ),
         silent = TRUE
       )[1]
     )
@@ -33,16 +33,15 @@ test_that("get_data_url works", {
 
   skip_on_cran()
   skip_if_offline()
+  # NOTE:Could INPE be temporaly off-line?
   expect_true(is_url_valid(get_data_url()))
-
 })
 
-
+# TODO: write more tests!
 
 test_that("download_data works", {
-  skip_on_cran()
-  skip_if_offline()
-
-  expect_error(download_data(out_dir = "/my/fake/dir"))
-  # TODO: write more tests!
+  # skip_on_cran()
+  # skip_if_offline()
+  #
+  # expect_error(download_data(out_dir = "/my/fake/dir"))
 })

@@ -278,25 +278,39 @@ break_lines <-
     data_tb = brazil_ym_tb,
     period_col = "period",
     break_pattern = "-08$"
+  ) |>
+  paste0("-01") |>
+  lubridate::as_date()
+
+brazil_ym_ref_tb <-
+  brazil_ym_tb |>
+  dplyr::filter(satelite %in% ref_satellite) |>
+  dplyr::mutate(
+    period = stringr::str_c(period, "-15"),
+    period = lubridate::as_date(period)
   )
 
 plot_line_brazil_year_month <-
-  brazil_ym_tb |>
-  dplyr::filter(satelite %in% ref_satellite) |>
   ggplot2::ggplot() +
-  ggplot2::geom_line(ggplot2::aes(
-    x = period,
-    y = n,
-    color = satelite,
-    group = satelite
-  )) +
-  ggplot2::geom_point(ggplot2::aes(
-    x = period,
-    y = n,
-    color = satelite,
-    group = satelite
-  )) +
-  ggplot2::scale_x_discrete(breaks = break_lines) +
+  ggplot2::geom_line(
+    mapping = ggplot2::aes(
+      x = period,
+      y = n,
+      color = satelite,
+      group = satelite
+    ),
+    data = brazil_ym_ref_tb
+  ) +
+  ggplot2::geom_point(
+    mapping = ggplot2::aes(
+      x = period,
+      y = n,
+      color = satelite,
+      group = satelite
+    ),
+    data = brazil_ym_ref_tb
+  ) +
+  ggplot2::scale_x_continuous(breaks = break_lines) +
   ggplot2::theme(
     axis.text.x = element_text(angle = 90),
     axis.title.x = element_blank(),
@@ -311,6 +325,80 @@ ggplot2::ggsave(
   units = plot_size_a5_ls[["units"]]
 )
 
+
+#---- Peak analysis ----
+
+year_peak_tb <-
+  brazil_ym_ref_tb |>
+  dplyr::mutate(y = stringr::str_sub(string = period, start = 1L, end = 4L)) |>
+  dplyr::group_by(satelite, y) |>
+  dplyr::slice(which.max(n)) |>
+  dplyr::ungroup() |>
+  dplyr::select(-y) |>
+  tidyr::nest(.by = satelite) |>
+  dplyr::mutate(
+    lm_obj = purrr::map(
+      .x = data,
+      .f = function(x) {
+        return(lm(formula = n ~ period, data = x))
+      }
+    ),
+    lm_ci = purrr::map(
+      .x = lm_obj,
+      .f = predict_ci
+    ),
+    lm_ci = purrr::map2(
+      .x = data,
+      .y = lm_ci,
+      .f = dplyr::bind_cols
+    )
+  ) |>
+  dplyr::select(satelite, lm_ci) |>
+  tidyr::unnest(lm_ci)
+
+plot_line_brazil_year_month_facet <-
+  plot_line_brazil_year_month +
+  ggplot2::geom_line(
+    mapping = ggplot2::aes(
+      x = period,
+      y = fit
+    ),
+    data = year_peak_tb,
+    linetype = "dotted",
+    alpha = 0.95
+  ) +
+  ggplot2::geom_point(
+    mapping = ggplot2::aes(
+      x = period,
+      y = fit
+    ),
+    data = year_peak_tb,
+    shape = 0,
+    alpha = 0.85
+  ) +
+  ggplot2::geom_ribbon(
+    mapping = ggplot2::aes(
+      x = period,
+      ymin = lwr,
+      ymax = upr,
+      group = satelite,
+      alpha = 0.8
+    ),
+    data = year_peak_tb,
+    fill = "gray85"
+  ) +
+  ggplot2::facet_wrap(
+    facets = vars(satelite),
+    scales = "free"
+  )
+
+ggplot2::ggsave(
+  filename = file.path(out_dir, "plot_line_brazil_year_month_facet.png"),
+  plot = plot_line_brazil_year_month_facet,
+  width = plot_size_a5_ls[["width"]],
+  height = plot_size_a5_ls[["height"]],
+  units = plot_size_a5_ls[["units"]]
+)
 
 #---- Brazil data by state, year and month ----
 
