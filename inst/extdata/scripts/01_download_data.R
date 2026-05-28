@@ -19,6 +19,7 @@ table_name <- "fire_foci"
 # NOTE: Storing data_pas as character instead of date eases posterior analysis.
 c_types <- "ddccccccdnncd"
 
+stopifnot("Database directory not found!" = dir.exists(dirname(sqlite_file)))
 stopifnot("Database already exists!" = !file.exists(sqlite_file))
 stopifnot("Temporal directory not found!" = dir.exists(tmp_dir))
 
