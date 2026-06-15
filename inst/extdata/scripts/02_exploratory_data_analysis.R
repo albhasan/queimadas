@@ -504,44 +504,29 @@ bfast_tb <-
   dplyr::mutate(
     ts = purrr::map(
       .x = data,
-      .f = function(data_tb) {
-        # NOTE: BFast demand data to have at least two periods.
-        if (nrow(data_tb) < 25) {
-          return(NA)
-        }
-        # NOTE: BFast demand data to be periodic.
-        data_tb <- data_tb[1:(nrow(data_tb) %/% 12 * 12), ]
-        ts_obj <- stats::ts(
-          data = data_tb[["n"]],
-          frequency = 12,
-          start = c(year(data_tb[[1, "ymd"]]), month(data_tb[[1, "ymd"]])),
-          end = c(
-            year(data_tb[[nrow(data_tb), "ymd"]]),
-            month(data_tb[[nrow(data_tb), "ymd"]])
-          )
-        )
-        return(ts_obj)
-      }
+      .f = convert_to_ts
     )
   ) |>
   dplyr::mutate(
     bf = purrr::map(
       .x = ts,
-      .f = function(x) {
-        if (length(x) == 1 && is.na(x)) {
+      .f = run_bfast
+    )
+  ) |>
+  # Get breaks' dates.
+  dplyr::mutate(
+    break_date = purrr::map2_vec(
+      .x = bf,
+      .y = data,
+      .f = function(bf, data) {
+        if (is.na(bf[["Time"]])) {
           return(NA)
         }
-        if (length(x) < 24) {
-          return(NA)
-        }
-        bfast::bfast(
-          Yt = x,
-          season = "harmonic",
-          max.iter = 10
-        )
+        return(data[bf[["Time"]], ][["ymd"]])
       }
     )
   )
+
 
 logger::log_info("Saving BFast plots to disk...")
 
@@ -554,6 +539,7 @@ for (i in seq_len(nrow(bfast_tb))) {
   bf_obj <- bfast_tb[["bf"]][[i]]
   if (!all(is.na(bf_obj))) {
     logger::log_info("Saving BFast plot to ", basename(filename), "...")
+    b_date <- as.character(bfast_tb[["break_date"]][[i]])
     grDevices::png(
       filename = filename,
       width = plot_size_a5_ls[["width"]],
@@ -561,11 +547,176 @@ for (i in seq_len(nrow(bfast_tb))) {
       units = plot_size_a5_ls[["units"]],
       res = 72
     )
-    plot(bf_obj)
+    plot(bf_obj, main = paste("Break date:", b_date))
     dev.off()
   }
 }
 
+logger::log_info("Using BFAST results to split AQUA_M-T time series...")
+
+bfast_plot_tb <-
+  bfast_tb |>
+  dplyr::filter(satelite == "AQUA_M-T") |>
+  dplyr::mutate(
+    data = purrr::map2(
+      .x = data,
+      .y = break_date,
+      .f = function(data, break_date) {
+        stopifnot("Only one break-date allowed!" = length(break_date) == 1)
+        data |>
+          dplyr::mutate(
+            after_break = dplyr::if_else(
+              condition = ymd > break_date,
+              true = TRUE,
+              false = FALSE
+            )
+          ) |>
+          dplyr::group_split(after_break)
+      }
+    )
+  ) |>
+  dplyr::select(satelite, data) |>
+  tidyr::unnest(data) |>
+  # Adjust linear model top annual values.
+  dplyr::mutate(
+    top_year = purrr::map(
+      .x = data,
+      .f = function(data) {
+        data |>
+          dplyr::mutate(y = lubridate::year(ymd)) |>
+          dplyr::group_by(y) |>
+          dplyr::slice_max(n) |>
+          dplyr::ungroup() |>
+          dplyr::select(ymd, n, after_break)
+      }
+    )
+  ) |>
+  dplyr::mutate(
+    lm_obj = purrr::map(
+      .x = top_year,
+      .f = function(top_year) {
+        lm(formula = n ~ ymd, data = top_year)
+      }
+    ),
+    lm_ci = purrr::map(
+      .x = lm_obj,
+      .f = predict_ci
+    ),
+    lm_ci = purrr::map2(
+      .x = top_year,
+      .y = lm_ci,
+      .f = dplyr::bind_cols
+    )
+  )
+
+bfast_ts_tb <-
+  bfast_plot_tb |>
+  dplyr::select(satelite, data) |>
+  tidyr::unnest(data) |>
+  dplyr::arrange(after_break, ymd)
+
+bfast_top_tb <-
+  bfast_plot_tb |>
+  dplyr::select(satelite, lm_ci) |>
+  tidyr::unnest(lm_ci) |>
+  dplyr::arrange(after_break, ymd)
+
+logger::log_info("Plotting AQUA_M-T time series using BFAST split...")
+
+bfast_aqua_plot <-
+  ggplot2::ggplot() +
+  ggplot2::geom_line(
+    mapping = ggplot2::aes(
+      x = ymd,
+      y = n
+    ),
+    data = bfast_ts_tb,
+    color = "blue"
+  ) +
+  ggplot2::geom_point(
+    mapping = ggplot2::aes(
+      x = ymd,
+      y = n
+    ),
+    data = bfast_ts_tb,
+    color = "blue",
+    shape = 16
+  ) +
+  ggplot2::geom_line(
+    mapping = ggplot2::aes(
+      x = ymd,
+      y = fit
+    ),
+    data = dplyr::filter(bfast_top_tb, after_break == FALSE),
+    color = "black"
+  ) +
+  ggplot2::geom_point(
+    mapping = ggplot2::aes(
+      x = ymd,
+      y = fit
+    ),
+    data = dplyr::filter(bfast_top_tb, after_break == FALSE),
+    color = "black",
+    shape = 0
+  ) +
+  ggplot2::geom_ribbon(
+    mapping = ggplot2::aes(
+      x = ymd,
+      ymin = lwr,
+      ymax = upr,
+      alpha = 0.9
+    ),
+    data = dplyr::filter(bfast_top_tb, after_break == FALSE),
+    fill = "gray"
+  ) +
+  ggplot2::geom_line(
+    mapping = ggplot2::aes(
+      x = ymd,
+      y = fit
+    ),
+    data = dplyr::filter(bfast_top_tb, after_break == TRUE),
+    color = "black"
+  ) +
+  ggplot2::geom_point(
+    mapping = ggplot2::aes(
+      x = ymd,
+      y = fit
+    ),
+    data = dplyr::filter(bfast_top_tb, after_break == TRUE),
+    color = "black",
+    shape = 0
+  ) +
+  ggplot2::geom_ribbon(
+    mapping = ggplot2::aes(
+      x = ymd,
+      ymin = lwr,
+      ymax = upr,
+      alpha = 0.9
+    ),
+    data = dplyr::filter(bfast_top_tb, after_break == TRUE),
+    fill = "gray"
+  ) +
+  ggplot2::scale_x_continuous(breaks = break_lines) +
+  ggplot2::theme(
+    axis.text.x = element_text(angle = 90),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank()
+  )
+
+filename <- file.path(
+  out_dir,
+  paste0("plot_bfast_split_brazil_year_month_", "AQUA_M-T", ".png")
+)
+
+logger::log_info(sprintf("Saving plot to file %s...", basename(filename)))
+
+ggplot2::ggsave(
+  filename = filename,
+  plot = bfast_aqua_plot,
+  width = plot_size_a5_ls[["width"]],
+  height = plot_size_a5_ls[["height"]],
+  units = plot_size_a5_ls[["units"]]
+)
 
 #---- Disconnect from the database ----
 

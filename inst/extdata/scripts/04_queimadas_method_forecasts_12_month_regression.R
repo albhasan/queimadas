@@ -523,7 +523,6 @@ for (i in seq_len(nrow(sat_tb))) {
 
 # no caso do aqua voltar ate 1998
 # correlacao de pearson da regiao sul
-# bfast? perguntar liana sobre o metodo que ela oleo
 #
 #
 # comparaçao do brazil com regiao, como ficaram os residuais,

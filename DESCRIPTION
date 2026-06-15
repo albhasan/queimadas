@@ -1,6 +1,6 @@
 Package: queimadas
 Title: Statistics from the Brazilian Queimadas Program
-Version: 0.0.0.9009
+Version: 0.0.0.9010
 Authors@R:
     person("Alber", "Sanchez", , "alber.ipia@inpe.br", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7966-2880"))
@@ -16,6 +16,7 @@ Config/testthat/edition: 3
 Depends:
     R (>= 4.1.0)
 Imports:
+    bfast,
     DBI,
     dplyr,
     ggplot2,
