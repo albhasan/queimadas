@@ -19,9 +19,5 @@ extent of x.}
 a plot object (ggplot2).
 }
 \description{
-Plot the results of applying the Queimadas method. This method consists on
-finding the time overlap between two time series of observations and
-adjust a linear model using the montly, but not the yearly, aggregated data.
-Then, the results of this allows to obtain for each \code{x} observation the
-estimatd \code{y} value for the time extent of \code{x}.
+Plot the results of applying the Queimadas method.
 }

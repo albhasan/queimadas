@@ -11,6 +11,6 @@
 #' @export
 #'
 get_cdata <- function(x, cname) {
-  stopifnot("Nam not found in data frame!" = all(cname %in% names(x)))
+  stopifnot("Name not found in data frame!" = all(cname %in% names(x)))
   return(x[[cname]])
 }

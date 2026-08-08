@@ -267,11 +267,7 @@ test_normal_residuals <- function(train_tb) {
 #' Plot the results of the Queimadas method
 #'
 #' @description
-#' Plot the results of applying the Queimadas method. This method consists on
-#' finding the time overlap between two time series of observations and
-#' adjust a linear model using the montly, but not the yearly, aggregated data.
-#' Then, the results of this allows to obtain for each `x` observation the
-#' estimatd `y` value for the time extent of `x`.
+#' Plot the results of applying the Queimadas method.
 #'
 #' @param x_df a data frame. The data on which `y` would be estimated.
 #' @param y_df a data frame. The data used to fit a linear model on the
@@ -536,11 +532,11 @@ get_plot_ref_sats_01 <- function(x, y, data_df) {
       linetype = "dashed"
     ) +
     ggplot2::xlab(x) +
-    ggplot2::ylab(y)
+    ggplot2::ylab(y) +
+    ggplot2::theme(legend.title = ggplot2::element_blank())
 
   return(p)
 }
-
 
 
 # get_plot_queimadas_forecast_01 <- function(x_df, y_df, forecast_df) {

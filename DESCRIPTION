@@ -1,6 +1,6 @@
 Package: queimadas
 Title: Statistics from the Brazilian Queimadas Program
-Version: 0.0.0.9011
+Version: 0.0.0.9012
 Authors@R:
     person("Alber", "Sanchez", , "alber.ipia@inpe.br", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7966-2880"))
@@ -30,10 +30,11 @@ Imports:
     prophet,
     stats,
     stringr,
+    tibble,
     tidyr,
     tidyquant,
     tidyselect,
     timetk,
     utils
 LazyData: true
-Config/roxygen2/version: 8.0.0
+Config/roxygen2/version: 8.1.0

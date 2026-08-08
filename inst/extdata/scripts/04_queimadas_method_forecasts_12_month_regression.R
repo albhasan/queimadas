@@ -1,5 +1,9 @@
+library(broom)
 library(dplyr)
 library(ggplot2)
+library(kableExtra)
+library(Hmisc)
+library(janitor)
 library(logger)
 library(purrr)
 library(tibble)
@@ -72,7 +76,7 @@ stopifnot("Invalid number of columns!" = ncol(sat_tb) == 2)
 
 sat_tb <-
   sat_tb |>
-  # get all x & y data.
+  # Get x & y data.
   dplyr::mutate(
     x_df = purrr::map(
       .x = satelite_x,
@@ -85,6 +89,7 @@ sat_tb <-
       data_df = brazil_ym_tb
     )
   ) |>
+  # Remove non-overlaping satellites.
   dplyr::mutate(
     overlap_ts = purrr::map2_int(
       .x = x_df,
@@ -94,10 +99,13 @@ sat_tb <-
     )
   ) |>
   dplyr::filter(overlap_ts > 0) |>
-  dplyr::select(-overlap_ts) |>
+  dplyr::select(-overlap_ts)
+
+sat_12_tb <-
+  sat_tb |>
   # Fit a linear model using overlapping x & y data.
   dplyr::mutate(
-    lm_data = purrr::map2(
+    lm_12_data = purrr::map2(
       .x = x_df,
       .y = y_df,
       .f = fit_lm_12_months,
@@ -105,22 +113,22 @@ sat_tb <-
       clevel = confidence_level
     ),
     # Get the model.
-    lm = purrr::map(
-      .x = lm_data,
+    lm_12 = purrr::map(
+      .x = lm_12_data,
       .f = get_cdata,
       cname = "model"
     ),
     # Get the overlaping data.
-    lm_data = purrr::map(
-      .x = lm_data,
+    lm_12_data = purrr::map(
+      .x = lm_12_data,
       .f = get_cdata,
       cname = "data"
     )
   ) |>
-  # Predict future and past using the fitted model.
+  # Estimate the continuity of time series using the fitted models.
   dplyr::mutate(
-    forecast_df = purrr::map2(
-      .x = lm,
+    forecast_12_df = purrr::map2(
+      .x = lm_12,
       .y = x_df,
       .f = function(lm_obj, data_vec) {
         pred_df <- predict_ci(
@@ -135,28 +143,31 @@ sat_tb <-
   ) |>
   # Plot the linear model between two reference satellites.
   dplyr::mutate(
-    plot_lm = purrr::pmap(
+    plot_lm_12 = purrr::pmap(
       .l = list(
         x = satelite_x,
         y = satelite_y,
-        data_df = lm_data,
-        lm_obj = lm
+        data_df = lm_12_data,
+        lm_obj = lm_12
       ),
       .f = get_plot_ref_sats
     )
   ) |>
   # Plot model prediction using the queimadas method.
   dplyr::mutate(
-    plot_queimadas = purrr::pmap(
+    plot_queimadas_12 = purrr::pmap(
       .l = list(
         x_df = x_df,
         y_df = y_df,
-        forecast_df = forecast_df
+        forecast_df = forecast_12_df
       ),
       .f = get_plot_queimadas_forecast
     )
-  ) |>
-  # Fit a linear model by month.
+  )
+
+sat_01_tb <-
+  sat_tb |>
+  # Fit a linear model using overlapping x & y data.
   dplyr::mutate(
     # Fit a model for each month.
     lm_data_month = purrr::map2(
@@ -185,6 +196,23 @@ sat_tb <-
           data_tb <- tibble::as_tibble(a[["data"]])
         })
         return(dplyr::bind_rows(lnames2df(df_ls = data_tb_ls, cname = "month")))
+      }
+    )
+  ) |>
+  dplyr::select(-lm_data_month) |>
+  # Get the models parameters as a tibble.
+  dplyr::mutate(
+    lm_01_model_param = purrr::map(
+      .x = lm_01_models,
+      .f = function(models_ls) {
+        purrr::map(
+          .x = models_ls,
+          .f = broom::tidy,
+          # TODO: check if broom computes the CI the same way as stats::predict
+          conf.int = TRUE,
+          conf.level = confidence_level
+        ) |>
+          purrr::list_rbind(names_to = "month")
       }
     )
   ) |>
@@ -222,20 +250,24 @@ sat_tb <-
       .l = list(
         x_df = x_df,
         y_df = y_df,
-        forecast_df = forecast_df
+        forecast_df = forecast_01_df
       ),
       .f = get_plot_queimadas_forecast
     )
-  ) |>
+  )
+
+sat_12_01_diff <-
+  sat_01_tb |>
+  dplyr::left_join(sat_12_tb, by = c("satelite_x", "satelite_y")) |>
   # Estimate differeces between the queimadas methods' forecast.
   dplyr::mutate(
     forecast_diff = purrr::map2(
-      .x = forecast_df,
+      .x = forecast_12_df,
       .y = forecast_01_df,
-      .f = function(forecast_df, forecast_01_df) {
+      .f = function(forecast_12_df, forecast_01_df) {
         cnames <- c("fit", "lwr", "upr")
-        res <- forecast_df[, cnames] - forecast_01_df[, cnames]
-        per <- forecast_df["period"]
+        res <- forecast_12_df[, cnames] - forecast_01_df[, cnames]
+        per <- forecast_12_df["period"]
         res <- cbind(per, res)
         colnames(res) <- c(
           colnames(res)[1],
@@ -280,15 +312,15 @@ sat_tb <-
 
 logger::log_info("Creating regression plots of the reference satellites...")
 
-for (i in seq_len(nrow(sat_tb))) {
-  sat_x <- sat_tb[["satelite_x"]][[i]]
-  sat_y <- sat_tb[["satelite_y"]][[i]]
-  lm_obj <- sat_tb[["lm"]][[i]]
-  p <- sat_tb[["plot_lm"]][[i]]
+for (i in seq_len(nrow(sat_12_tb))) {
+  sat_x <- sat_12_tb[["satelite_x"]][[i]]
+  sat_y <- sat_12_tb[["satelite_y"]][[i]]
+  lm_obj <- sat_12_tb[["lm"]][[i]]
+  p <- sat_12_tb[["plot_lm"]][[i]]
   plot_file <- file.path(
     out_dir,
     "figures",
-    paste0("plot_queimadas_lm_", sat_y, "_along_", sat_x, ".png")
+    paste0("plot_queimadas_lm_12_", sat_y, "_along_", sat_x, ".png")
   )
   logger::log_info("Saving linear model plot to file: ", basename(plot_file))
   ggplot2::ggsave(
@@ -304,10 +336,10 @@ logger::log_info(
   "Creating regression plots (month-by-month) of the reference satellites..."
 )
 
-for (i in seq_len(nrow(sat_tb))) {
-  sat_x <- sat_tb[["satelite_x"]][[i]]
-  sat_y <- sat_tb[["satelite_y"]][[i]]
-  p <- sat_tb[["plot_lm_01"]][[i]]
+for (i in seq_len(nrow(sat_01_tb))) {
+  sat_x <- sat_01_tb[["satelite_x"]][[i]]
+  sat_y <- sat_01_tb[["satelite_y"]][[i]]
+  p <- sat_01_tb[["plot_lm_01"]][[i]]
   plot_file <- file.path(
     out_dir,
     "figures",
@@ -326,18 +358,146 @@ for (i in seq_len(nrow(sat_tb))) {
   )
 }
 
+logger::log_info("Writting lm 01 regression parameters to CSV and LATEX...")
 
-logger::log_info("Writing lm parameters to CSV...")
+lm_01_param_tb <-
+  sat_01_tb |>
+  dplyr::select(satelite_x, satelite_y, lm_01_model_param) |>
+  tidyr::unnest(lm_01_model_param) |>
+  # NOTE: Avoid CSV problems in LaTeX caused by underscores in column names.
+  dplyr::rename(
+    satelitex = satelite_x,
+    satelitey = satelite_y,
+    month = month,
+    term = term,
+    estimate = estimate,
+    stderror = std.error,
+    statistic = statistic,
+    pvalue = p.value,
+    conflow = conf.low,
+    confhigh = conf.high
+  ) |>
+  dplyr::group_split(satelitex, satelitey) |>
+  purrr::map(
+    .f = function(x) {
+      sat_x <- unique(x[["satelitex"]])
+      sat_y <- unique(x[["satelitey"]])
+      out_file <-
+        file.path(
+          out_dir,
+          "tables",
+          paste0("queimadas_method_lm_01_param_x_", sat_x, "_y_", sat_y)
+        )
+      x |>
+        janitor::clean_names() |>
+        get_latex_char() |>
+        readr::write_csv(
+          file = paste0(out_file, ".csv")
+        )
+      x |>
+        dplyr::select(month, term, estimate, stderror, conflow, confhigh) |>
+        dplyr::mutate(
+          month = stringr::str_sub(month, start = 7, end = 9)
+        ) |>
+        kableExtra::kbl(
+          format = "latex",
+          digits = 2,
+          booktabs = TRUE,
+          longtable = TRUE,
+          linesep = "",
+          align = "ccrrrr",
+          caption = sprintf(
+            "Parameters of the monthly linear regressions of %s as a function of %s. Each monthly regression is determined by two parameters, its intercept and its slope (\\textit{x}).",
+            Hmisc::latexTranslate(sat_y),
+            Hmisc::latexTranslate(sat_x)
+          ),
+          # label = paste0("tab:", basename(out_file)),
+          label = basename(out_file),
+          col.names = c("Month", "Term", "Estimate", "Std. Error", "Lower", "Upper")
+        ) |>
+        kableExtra::kable_styling(
+          latex_options = c("striped", "repeat_header", "hold_position"),
+          position = "center"
+        ) |>
+        readr::write_lines(
+          file = paste0(out_file, ".tex")
+        )
+    }
+  )
 
-lm_param_tb <-
-  sat_tb |>
+logger::log_info("Writting lm 01 regression forecast to CSV and TEX...")
+
+lm_01_forecast_tb <-
+  sat_01_tb |>
+  dplyr::select(satelite_x, satelite_y, forecast_01_df) |>
+  tidyr::unnest(forecast_01_df) |>
+  dplyr::select(satelite_x, satelite_y, period, n, fit, lwr, upr) |>
+  # NOTE: Avoid CSV problems in LaTeX caused by underscores in column names.
+  dplyr::rename(
+    satelitex = satelite_x,
+    satelitey = satelite_y,
+    obs = n
+  ) |>
+  dplyr::group_split(satelitex, satelitey) |>
+  purrr::map(
+    .f = function(x) {
+      sat_x <- unique(x[["satelitex"]])
+      sat_y <- unique(x[["satelitey"]])
+      out_file <-
+        file.path(
+          out_dir,
+          "tables",
+          paste0(
+            "queimadas_method_lm_01_forecast_x_", sat_x, "_y_", sat_y
+          )
+        )
+      x <-
+        x |>
+        dplyr::arrange(period, satelitex, satelitey)
+      x |>
+        janitor::clean_names() |>
+        get_latex_char() |>
+        readr::write_csv(
+          file = paste0(out_file, ".csv")
+        )
+      x |>
+        dplyr::select(period, obs, fit, lwr, upr) |>
+        kableExtra::kbl(
+          format = "latex",
+          digits = 2,
+          booktabs = TRUE,
+          longtable = TRUE,
+          linesep = "",
+          align = "crrrr",
+          caption = sprintf(
+            "Continuity of the monthly aggregated %s fire data estimated from %s.",
+            Hmisc::latexTranslate(sat_y),
+            Hmisc::latexTranslate(sat_x)
+          ),
+          # label = paste0("tab:", basename(out_file)),
+          label = basename(out_file),
+          col.names = c("Period", "Obs.", "Fit", "Lower", "Upper")
+        ) |>
+        kableExtra::kable_styling(
+          latex_options = c("striped", "repeat_header", "hold_position")
+        ) |>
+        readr::write_lines(
+          file = paste0(out_file, ".tex")
+        )
+    }
+  )
+
+logger::log_info("Writing lm equations to CSV...")
+
+lm_12_param_tb <-
+  sat_12_tb |>
   dplyr::mutate(
     equation = purrr::map_chr(
-      .x = lm,
+      .x = lm_12,
       .f = get_lm_equation
     ),
     r2 = purrr::map_chr(
-      .x = lm,
+      .x = lm_12,
       .f = function(x) {
         sprintf("%.2f", get_lm_r2(lm_obj = x))
       }
@@ -355,20 +515,20 @@ lm_param_tb <-
 
 logger::log_info("Writing lm outliers to CSV...")
 
-lm_outliers_tb <-
-  sat_tb |>
+lm_12_outliers_tb <-
+  sat_12_tb |>
   dplyr::mutate(
     outliers_file = file.path(
       out_dir,
       "tables",
       paste0(
-        "outliers_queimadas_lm_", satelite_y, "_along_", satelite_x, ".csv"
+        "outliers_queimadas_lm_12_", satelite_y, "_along_", satelite_x, ".csv"
       )
     )
   ) |>
   dplyr::mutate(
     write_csv_file = purrr::map2_chr(
-      .x = lm_data,
+      .x = lm_12_data,
       .y = outliers_file,
       .f = function(lm_data, outliers_file) {
         lm_data |>
@@ -383,7 +543,7 @@ lm_outliers_tb <-
     )
   )
 
-logger::log_info("Creaing break lines on August of each year...")
+logger::log_info("Creating break lines on August of each year...")
 
 break_lines <-
   get_break_lines_year(
@@ -519,12 +679,13 @@ for (i in seq_len(nrow(sat_tb))) {
   )
 }
 
-# TODO: Regression curve by region.
+# NOTE: Regression curve by region?
+# TODO: Regression by cell.
 
 # no caso do aqua voltar ate 1998
 # correlacao de pearson da regiao sul
-#
-#
 # comparaçao do brazil com regiao, como ficaram os residuais,
 
-# TODO: Liana olhar segmented regression analysis, modified mamn-kentall, sem slope, loeless regression
+# DONE: Liana olhar segmented regression analysis, modified mamn-kentall,
+# sem slope, loeless regression. I didn't do this, instead I estimated breaks
+# using BFAST.

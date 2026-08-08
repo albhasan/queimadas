@@ -17,11 +17,11 @@ fit_lm_12_months(x_df, y_df, formula = "y ~ x", clevel = 0.95)
 confidence interval.}
 }
 \value{
-a list with two objects: an \code{stats::lm} object and a data frame with
-the data used to fit the model.
+a list with two objects: a single \code{stats::lm} object and a data
+frame with the data used to fit the model.
 }
 \description{
 Given two data frames, merge them and then fit a linear model using their
-overlaping observations using the observations' month,  but ignoring
+overlaping observations using the observations' month, but ignoring
 their year.
 }

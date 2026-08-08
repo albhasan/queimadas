@@ -26,7 +26,7 @@ get_sat_data <- function(sat_name, data_df) {
 #'
 #' @description
 #' Given two data frames, merge them and then fit a linear model using their
-#' overlaping observations using the observations' month,  but ignoring
+#' overlaping observations using the observations' month, but ignoring
 #' their year.
 #'
 #' @param x_df a data frame.
@@ -35,8 +35,8 @@ get_sat_data <- function(sat_name, data_df) {
 #' @param clevel a numeric(1). The confidence level for estimating the
 #' confidence interval.
 #'
-#' @return a list with two objects: an `stats::lm` object and a data frame with
-#' the data used to fit the model.
+#' @return a list with two objects: a single `stats::lm` object and a data
+#' frame with the data used to fit the model.
 #
 #' @export
 #'
