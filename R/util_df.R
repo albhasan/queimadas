@@ -9,6 +9,8 @@
 #'
 #' @return         A list of data frames.
 #'
+#' @export
+#'
 lnames2df <- function(df_ls, cname) {
   stopifnot(
     "Expected a list of data frames!" =

@@ -1,10 +1,10 @@
-library(queimadas)
-
 library(DBI)
 library(dplyr)
 library(logger)
 library(purrr)
 library(readr)
+
+library(queimadas)
 
 logger::log_threshold(INFO)
 

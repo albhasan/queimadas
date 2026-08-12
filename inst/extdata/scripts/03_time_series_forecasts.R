@@ -1,11 +1,10 @@
-library(queimadas)
-
 library(dplyr)
 library(forecast)
 library(purrr)
 library(tibble)
 library(lubridate)
 
+library(queimadas)
 
 #---- Configuration ----
 

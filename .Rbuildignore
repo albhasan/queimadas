@@ -6,3 +6,5 @@ tags
 ^pkgdown$
 ^data-raw$
 [.]png$
+^\.github$
+^vignettes/articles$

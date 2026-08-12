@@ -8,6 +8,8 @@
 #'
 #' @return A plot (ggplot2) object.
 #'
+#' @export
+#'
 get_plot_forecast_vs_obs <- function(obs_tb, forecast_tb) {
   stopifnot(
     "Missing columns in forecast data" =
@@ -69,6 +71,8 @@ get_plot_forecast_vs_obs <- function(obs_tb, forecast_tb) {
 #' @param train_tb a tibble with time series data.
 #'
 #' @return a list of ggplot2 objects.
+#'
+#' @export
 #'
 visual_test_ts <- function(train_tb) {
   ds <- SMA <- y <- NULL
@@ -147,6 +151,8 @@ visual_test_ts <- function(train_tb) {
 #'
 #' @return a list of ggplot2 objects.
 #'
+#' @export
+#'
 component_analysis <- function(train_tb) {
   ds <- y <- NULL
   stopifnot(
@@ -214,6 +220,8 @@ component_analysis <- function(train_tb) {
 #' @param train_tb a tibble with time series data.
 #'
 #' @return a list of ggplot2 objects.
+#'
+#' @export
 #'
 test_normal_residuals <- function(train_tb) {
   ds <- residual <- y <- yhat <- NULL
@@ -409,6 +417,8 @@ get_plot_queimadas_forecast <- function(x_df, y_df, forecast_df) {
 #'
 #' @return A plot (ggplot2) object.
 #'
+#' @export
+#'
 get_plot_ref_sats <- function(x, y, data_df, lm_obj) {
   fit <- is_outlier <- lwr <- m <- upr <- NULL
   stopifnot(
@@ -486,6 +496,8 @@ get_plot_ref_sats <- function(x, y, data_df, lm_obj) {
 #'
 #' @return A plot (ggplot2) object.
 #'
+#' @export
+#'
 get_plot_ref_sats_01 <- function(x, y, data_df) {
   fit <- lwr <- m <- upr <- month <- NULL
   stopifnot(
@@ -537,122 +549,3 @@ get_plot_ref_sats_01 <- function(x, y, data_df) {
 
   return(p)
 }
-
-
-# get_plot_queimadas_forecast_01 <- function(x_df, y_df, forecast_df) {
-#   fit <- lwr <- period_date <- upr <- n <- NULL
-#
-#   f_line_color <- "blue"
-#   f_line_type <- "solid"
-#   f_line_width <- 0.4
-#   f_point_color <- "blue"
-#   f_point_shape <- "circle"
-#   f_point_size <- 2
-#
-#   x_line_color <- "black"
-#   x_line_width <- 0.2
-#   x_line_type <- "dotted"
-#   x_point_color <- "black"
-#   x_point_shape <- "plus"
-#   x_point_size <- 1
-#
-#   y_line_color <- "red"
-#   y_line_width <- 0.2
-#   y_line_type <- "dashed"
-#
-#   y_point_shape <- "cross"
-#   y_point_color <- "red"
-#   y_point_size <- 1
-#
-#   forecast_df <- forecast_df[order(forecast_df[["period"]]), ]
-#   x_df <- x_df[order(x_df[["period"]]), ]
-#   y_df <- y_df[order(y_df[["period"]]), ]
-#
-#   forecast_df["period_date"] <- period_to_date(forecast_df[["period"]])
-#   x_df["period_date"] <- period_to_date(x_df[["period"]])
-#   y_df["period_date"] <- period_to_date(y_df[["period"]])
-#
-#   p <-
-#     ggplot2::ggplot() +
-#     # Shadow: confidence interval.
-#     ggplot2::geom_ribbon(
-#       mapping = ggplot2::aes(
-#         x = period_date,
-#         ymin = lwr,
-#         ymax = upr,
-#       ),
-#       fill = "gray80",
-#       data = forecast_df
-#     ) +
-#     # Forecast line.
-#     ggplot2::geom_line(
-#       mapping = ggplot2::aes(
-#         x = period_date,
-#         y = fit,
-#         group = 1
-#       ),
-#       color = f_line_color,
-#       linewidth = f_line_width,
-#       linetype = f_line_type,
-#       data = forecast_df
-#     ) +
-#     # Forecast points.
-#     ggplot2::geom_point(
-#       mapping = ggplot2::aes(
-#         x = period_date,
-#         y = fit
-#       ),
-#       color = f_point_color,
-#       shape = f_point_shape,
-#       size = f_point_size,
-#       data = forecast_df
-#     ) +
-#     # X line.
-#     ggplot2::geom_line(
-#       mapping = ggplot2::aes(
-#         x = period_date,
-#         y = n,
-#         group = 1
-#       ),
-#       color = x_line_color,
-#       linewidth = x_line_width,
-#       linetype = x_line_type,
-#       data = x_df
-#     ) +
-#     # X points.
-#     ggplot2::geom_point(
-#       mapping = ggplot2::aes(
-#         x = period_date,
-#         y = n
-#       ),
-#       color = x_point_color,
-#       shape = x_point_shape,
-#       size = x_point_size,
-#       data = x_df
-#     ) +
-#     # Y line.
-#     ggplot2::geom_line(
-#       mapping = ggplot2::aes(
-#         x = period_date,
-#         y = n,
-#         group = 1
-#       ),
-#       color = y_line_color,
-#       linewidth = y_line_width,
-#       linetype = y_line_type,
-#       data = y_df
-#     ) +
-#     # Y points.
-#     ggplot2::geom_point(
-#       mapping = ggplot2::aes(
-#         x = period_date,
-#         y = n
-#       ),
-#       color = y_point_color,
-#       shape = y_point_shape,
-#       size = y_point_size,
-#       data = y_df
-#     )
-#
-#   return(p)
-# }

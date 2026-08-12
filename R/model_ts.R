@@ -7,6 +7,8 @@
 #'
 #' @return a model object (prophet).
 #'
+#' @export
+#'
 fit_prophet_model <- function(train_tb) {
   ds <- y <- NULL
   stopifnot(c("ds", "y") %in% colnames(train_tb))
