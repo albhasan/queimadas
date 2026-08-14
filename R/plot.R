@@ -549,3 +549,119 @@ get_plot_ref_sats_01 <- function(x, y, data_df) {
 
   return(p)
 }
+
+
+
+#' Get a plot showing BFast breaks
+#'
+#' @description
+#' Plot times series of queimadas data showing their break points.
+#'
+#' @param bfast_ts_tb A tibble with the time series, including a logical column
+#' (*after_break*) representing the observations before and after the break.
+#' @param bfast_top_tb A tibble with only the top observations of each period
+#' (year).
+#' @param break_lines A Date. Dates on which the perio changes (years).
+#'
+#' @return A ggplot2 object.
+#'
+#' @export
+#'
+get_plot_ts_with_bfast_break <- function(bfast_ts_tb, bfast_top_tb, break_lines) {
+  after_break <- fit <- lwr <- n <- upr <- ymd <- NULL
+
+  stopifnot(
+    "Only one satellite allowed!" =
+      length(unique(bfast_ts_tb[["satelite"]])) == 1
+  )
+  stopifnot(
+    "Column after_break not found in bfast_ts_tb!" =
+      "after_break" %in% colnames(bfast_ts_tb)
+  )
+  stopifnot(
+    "Columns missing in bfast_top_tb!" =
+      c("after_break", "lwr", "upr") %in% colnames(bfast_top_tb)
+  )
+
+  p <-
+    ggplot2::ggplot() +
+    ggplot2::geom_line(
+      mapping = ggplot2::aes(
+        x = ymd,
+        y = n
+      ),
+      data = bfast_ts_tb,
+      color = "blue"
+    ) +
+    ggplot2::geom_point(
+      mapping = ggplot2::aes(
+        x = ymd,
+        y = n
+      ),
+      data = bfast_ts_tb,
+      color = "blue",
+      shape = 16
+    ) +
+    ggplot2::geom_line(
+      mapping = ggplot2::aes(
+        x = ymd,
+        y = fit
+      ),
+      data = dplyr::filter(bfast_top_tb, after_break == FALSE),
+      color = "black"
+    ) +
+    ggplot2::geom_point(
+      mapping = ggplot2::aes(
+        x = ymd,
+        y = fit
+      ),
+      data = dplyr::filter(bfast_top_tb, after_break == FALSE),
+      color = "black",
+      shape = 0
+    ) +
+    ggplot2::geom_ribbon(
+      mapping = ggplot2::aes(
+        x = ymd,
+        ymin = lwr,
+        ymax = upr,
+        alpha = 0.9
+      ),
+      data = dplyr::filter(bfast_top_tb, after_break == FALSE),
+      fill = "gray"
+    ) +
+    ggplot2::geom_line(
+      mapping = ggplot2::aes(
+        x = ymd,
+        y = fit
+      ),
+      data = dplyr::filter(bfast_top_tb, after_break == TRUE),
+      color = "black"
+    ) +
+    ggplot2::geom_point(
+      mapping = ggplot2::aes(
+        x = ymd,
+        y = fit
+      ),
+      data = dplyr::filter(bfast_top_tb, after_break == TRUE),
+      color = "black",
+      shape = 0
+    ) +
+    ggplot2::geom_ribbon(
+      mapping = ggplot2::aes(
+        x = ymd,
+        ymin = lwr,
+        ymax = upr,
+        alpha = 0.9
+      ),
+      data = dplyr::filter(bfast_top_tb, after_break == TRUE),
+      fill = "gray"
+    ) +
+    ggplot2::scale_x_continuous(breaks = break_lines) +
+    ggplot2::theme(
+      axis.text.x = ggplot2::element_text(angle = 90),
+      axis.title.x = ggplot2::element_blank(),
+      axis.title.y = ggplot2::element_blank(),
+      legend.position = "none"
+    )
+  return(p)
+}

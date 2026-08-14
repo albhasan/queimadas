@@ -6,6 +6,8 @@ library(lubridate)
 
 library(queimadas)
 
+# TODO: Add logging!
+
 #---- Configuration ----
 
 sqlite_file <- "~/Documents/data/r_packages/queimadas/fire.sqlite"
@@ -213,9 +215,7 @@ for (r in seq_len(nrow(satellite_tb))) {
 }
 
 
-#---- TODO: Compare ----
-# TODO: Compute the residuals by transforming one time series into another and
-# compare the results to the forescast. Does this make sense?
+#---- Compare ----
 
 # NOTE: The best looking forecast belongs to NPP-375-PM!
 

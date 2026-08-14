@@ -316,7 +316,7 @@ for (i in seq_len(nrow(sat_12_tb))) {
   sat_x <- sat_12_tb[["satelite_x"]][[i]]
   sat_y <- sat_12_tb[["satelite_y"]][[i]]
   lm_obj <- sat_12_tb[["lm"]][[i]]
-  p <- sat_12_tb[["plot_lm"]][[i]]
+  p <- sat_12_tb[["plot_lm_12"]][[i]]
   plot_file <- file.path(
     out_dir,
     "figures",
@@ -594,11 +594,11 @@ for (i in seq_len(nrow(sat_tb))) {
 
 logger::log_info("Plot forecast using queimadas (1-month) method...")
 
-for (i in seq_len(nrow(sat_tb))) {
-  sat_x <- sat_tb[["satelite_x"]][[i]]
-  sat_y <- sat_tb[["satelite_y"]][[i]]
+for (i in seq_len(nrow(sat_01_tb))) {
+  sat_x <- sat_01_tb[["satelite_x"]][[i]]
+  sat_y <- sat_01_tb[["satelite_y"]][[i]]
   p <-
-    sat_tb[["plot_queimadas_01"]][[i]] +
+    sat_01_tb[["plot_queimadas_01"]][[i]] +
     ggplot2::scale_x_continuous(breaks = break_lines) +
     ggplot2::xlab("Time") +
     ggplot2::ylab("Number of events") +
@@ -639,7 +639,7 @@ for (i in seq_len(nrow(sat_tb))) {
   sat_x <- sat_tb[["satelite_x"]][[i]]
   sat_y <- sat_tb[["satelite_y"]][[i]]
   p <-
-    sat_tb[["plot_forecast_diff"]][[i]] +
+    sat_12_01_diff[["plot_forecast_diff"]][[i]] +
     ggplot2::theme(
       axis.text.x = ggplot2::element_text(
         angle = 90,
@@ -689,3 +689,5 @@ for (i in seq_len(nrow(sat_tb))) {
 # DONE: Liana olhar segmented regression analysis, modified mamn-kentall,
 # sem slope, loeless regression. I didn't do this, instead I estimated breaks
 # using BFAST.
+
+logger::log_info("Finished!")

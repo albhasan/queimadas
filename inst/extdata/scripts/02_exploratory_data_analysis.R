@@ -552,11 +552,11 @@ for (i in seq_len(nrow(bfast_tb))) {
   }
 }
 
-logger::log_info("Using BFAST results to split AQUA_M-T time series...")
+logger::log_info("Using BFAST results to split time series...")
 
 bfast_plot_tb <-
   bfast_tb |>
-  dplyr::filter(satelite == "AQUA_M-T") |>
+  dplyr::filter(is.na(break_date) == FALSE) |>
   dplyr::mutate(
     data = purrr::map2(
       .x = data,
@@ -624,95 +624,44 @@ bfast_top_tb <-
 logger::log_info("Plotting AQUA_M-T time series using BFAST split...")
 
 bfast_aqua_plot <-
-  ggplot2::ggplot() +
-  ggplot2::geom_line(
-    mapping = ggplot2::aes(
-      x = ymd,
-      y = n
-    ),
-    data = bfast_ts_tb,
-    color = "blue"
-  ) +
-  ggplot2::geom_point(
-    mapping = ggplot2::aes(
-      x = ymd,
-      y = n
-    ),
-    data = bfast_ts_tb,
-    color = "blue",
-    shape = 16
-  ) +
-  ggplot2::geom_line(
-    mapping = ggplot2::aes(
-      x = ymd,
-      y = fit
-    ),
-    data = dplyr::filter(bfast_top_tb, after_break == FALSE),
-    color = "black"
-  ) +
-  ggplot2::geom_point(
-    mapping = ggplot2::aes(
-      x = ymd,
-      y = fit
-    ),
-    data = dplyr::filter(bfast_top_tb, after_break == FALSE),
-    color = "black",
-    shape = 0
-  ) +
-  ggplot2::geom_ribbon(
-    mapping = ggplot2::aes(
-      x = ymd,
-      ymin = lwr,
-      ymax = upr,
-      alpha = 0.9
-    ),
-    data = dplyr::filter(bfast_top_tb, after_break == FALSE),
-    fill = "gray"
-  ) +
-  ggplot2::geom_line(
-    mapping = ggplot2::aes(
-      x = ymd,
-      y = fit
-    ),
-    data = dplyr::filter(bfast_top_tb, after_break == TRUE),
-    color = "black"
-  ) +
-  ggplot2::geom_point(
-    mapping = ggplot2::aes(
-      x = ymd,
-      y = fit
-    ),
-    data = dplyr::filter(bfast_top_tb, after_break == TRUE),
-    color = "black",
-    shape = 0
-  ) +
-  ggplot2::geom_ribbon(
-    mapping = ggplot2::aes(
-      x = ymd,
-      ymin = lwr,
-      ymax = upr,
-      alpha = 0.9
-    ),
-    data = dplyr::filter(bfast_top_tb, after_break == TRUE),
-    fill = "gray"
-  ) +
-  ggplot2::scale_x_continuous(breaks = break_lines) +
-  ggplot2::theme(
-    axis.text.x = element_text(angle = 90),
-    axis.title.x = element_blank(),
-    axis.title.y = element_blank()
+  get_plot_ts_with_bfast_break(
+    bfast_ts_tb = dplyr::filter(bfast_ts_tb, satelite == "AQUA_M-T"),
+    bfast_top_tb = dplyr::filter(bfast_top_tb, satelite == "AQUA_M-T"),
+    break_lines = break_lines
   )
 
-filename <- file.path(
+bfast_noaa_plot <-
+  get_plot_ts_with_bfast_break(
+    bfast_ts_tb = dplyr::filter(bfast_ts_tb, satelite == "NOAA-12"),
+    bfast_top_tb = dplyr::filter(bfast_top_tb, satelite == "NOAA-12"),
+    break_lines = break_lines
+  )
+
+filename_aqua <- file.path(
   out_dir,
   paste0("plot_bfast_split_brazil_year_month_", "AQUA_M-T", ".png")
 )
 
-logger::log_info(sprintf("Saving plot to file %s...", basename(filename)))
+filename_noaa <- file.path(
+  out_dir,
+  paste0("plot_bfast_split_brazil_year_month_", "NOAA-12", ".png")
+)
+
+logger::log_info(sprintf("Saving plot to file %s...", basename(filename_aqua)))
 
 ggplot2::ggsave(
-  filename = filename,
+  filename = filename_aqua,
   plot = bfast_aqua_plot,
+  width = plot_size_a5_ls[["width"]],
+  height = plot_size_a5_ls[["height"]],
+  units = plot_size_a5_ls[["units"]]
+)
+
+logger::log_info(sprintf("Saving plot to file %s...", basename(filename_noaa)))
+
+ggplot2::ggsave(
+  filename = filename_noaa,
+  plot = bfast_noaa_plot,
   width = plot_size_a5_ls[["width"]],
   height = plot_size_a5_ls[["height"]],
   units = plot_size_a5_ls[["units"]]
