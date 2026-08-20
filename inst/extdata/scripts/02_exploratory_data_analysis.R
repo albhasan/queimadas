@@ -1,5 +1,3 @@
-library(queimadas)
-
 library(bfast)
 library(dplyr)
 library(ggplot2)
@@ -9,6 +7,8 @@ library(readr)
 library(sf)
 library(stringr)
 library(tidyr)
+
+library(queimadas)
 
 logger::log_threshold(INFO)
 
@@ -69,6 +69,21 @@ sats[stringr::str_starts(sats, "NPP")]
 
 # logger::log_info("Creating aggregation result table...")
 # Save data as CSV.
+brazil_ym_tb |>
+  tidyr::separate(
+    col = "period",
+    into = c("year", "month"),
+    sep = "-"
+  ) |>
+  dplyr::group_by(year, satelite) |>
+  dplyr::summarize(n = sum(n)) |>
+  tidyr::pivot_wider(
+    id_cols = year,
+    names_from = satelite,
+    values_from = n
+  )
+
+
 # brazil_ym_tb |>
 #   add_sat_family() |>
 #   tidyr::pivot_wider(

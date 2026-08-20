@@ -7,6 +7,8 @@ library(janitor)
 library(logger)
 library(purrr)
 library(tibble)
+library(tidyr)
+library(tidyselect)
 
 library(queimadas)
 
@@ -35,9 +37,6 @@ rm(db_con)
 
 
 #---- Util ----
-
-# Utilitary. Plot the regression lines of the month models.
-# TODO: get_plot_lm_01 <- function(plot_data) {}
 
 #---- Forecast using the queimadas approach ----
 
@@ -395,7 +394,10 @@ lm_01_param_tb <-
           file = paste0(out_file, ".csv")
         )
       x |>
-        dplyr::select(month, term, estimate, stderror, conflow, confhigh) |>
+        dplyr::select(
+          month, term, estimate, stderror,
+          pvalue, conflow, confhigh
+        ) |>
         dplyr::mutate(
           month = stringr::str_sub(month, start = 7, end = 9)
         ) |>
@@ -405,15 +407,17 @@ lm_01_param_tb <-
           booktabs = TRUE,
           longtable = TRUE,
           linesep = "",
-          align = "ccrrrr",
+          align = "ccrrrrr",
           caption = sprintf(
             "Parameters of the monthly linear regressions of %s as a function of %s. Each monthly regression is determined by two parameters, its intercept and its slope (\\textit{x}).",
             Hmisc::latexTranslate(sat_y),
             Hmisc::latexTranslate(sat_x)
           ),
-          # label = paste0("tab:", basename(out_file)),
           label = basename(out_file),
-          col.names = c("Month", "Term", "Estimate", "Std. Error", "Lower", "Upper")
+          col.names = c(
+            "Month", "Term", "Estimate", "Std. Error",
+            "P Value", "Lower", "Upper"
+          )
         ) |>
         kableExtra::kable_styling(
           latex_options = c("striped", "repeat_header", "hold_position"),
@@ -443,6 +447,7 @@ lm_01_forecast_tb <-
     .f = function(x) {
       sat_x <- unique(x[["satelitex"]])
       sat_y <- unique(x[["satelitey"]])
+
       out_file <-
         file.path(
           out_dir,
@@ -451,15 +456,20 @@ lm_01_forecast_tb <-
             "queimadas_method_lm_01_forecast_x_", sat_x, "_y_", sat_y
           )
         )
+
       x <-
         x |>
         dplyr::arrange(period, satelitex, satelitey)
+
+      # NOTE: Write the raw data to CSV with LaTeX's character escape.
       x |>
         janitor::clean_names() |>
         get_latex_char() |>
         readr::write_csv(
           file = paste0(out_file, ".csv")
         )
+
+      # NOTE: Write straight to LaTeX's table.
       x |>
         dplyr::select(period, obs, fit, lwr, upr) |>
         kableExtra::kbl(
@@ -470,11 +480,10 @@ lm_01_forecast_tb <-
           linesep = "",
           align = "crrrr",
           caption = sprintf(
-            "Continuity of the monthly aggregated %s fire data estimated from %s.",
+            "Monthly continuity of aggregated %s fire data estimated from %s.",
             Hmisc::latexTranslate(sat_y),
             Hmisc::latexTranslate(sat_x)
           ),
-          # label = paste0("tab:", basename(out_file)),
           label = basename(out_file),
           col.names = c("Period", "Obs.", "Fit", "Lower", "Upper")
         ) |>
@@ -483,6 +492,23 @@ lm_01_forecast_tb <-
         ) |>
         readr::write_lines(
           file = paste0(out_file, ".tex")
+        )
+
+      # Format the table using the Queimadas' style.
+      table_tb <- get_queimadas_web_table(data_tb = x)
+
+      out_file_con <- paste0(out_file, "_continuity")
+      table_tb |>
+        get_queimadas_web_table_latex(
+          tab_label = out_file_con,
+          caption = sprintf(
+            "Monthly continuity of %s fire data estimated from %s.",
+            Hmisc::latexTranslate(sat_y),
+            Hmisc::latexTranslate(sat_x)
+          )
+        ) |>
+        readr::write_lines(
+          file = paste0(out_file_con, ".tex")
         )
     }
   )

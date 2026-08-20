@@ -8,3 +8,4 @@ tags
 [.]png$
 ^\.github$
 ^vignettes/articles$
+^inst/extdata/slides$
