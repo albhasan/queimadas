@@ -11,9 +11,11 @@ logger::log_threshold(INFO)
 logger::log_info("Script 01_download_data starting...")
 
 logger::log_info("Reading parameters...")
+out_dir <- "/home/alber/Documents/data/r_packages/queimadas"
+stopifnot("Output directory not found!" = dir.exists(out_dir))
 tmp_dir <- tempdir()
 zip_dir <- file.path(tmp_dir, "zip_dir")
-csv_dir <- file.path(tmp_dir, "csv_dir")
+csv_dir <- file.path(out_dir, "csv")
 sqlite_file <- "/home/alber/Documents/data/r_packages/queimadas/fire.sqlite"
 table_name <- "fire_foci"
 # NOTE: Storing data_pas as character instead of date eases posterior analysis.
