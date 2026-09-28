@@ -21,6 +21,36 @@ get_sat_data <- function(sat_name, data_df) {
   return(x_df)
 }
 
+#' Utilitary function to filter observations by satellite and cell
+#'
+#' @description
+#' Get an observation from the given data frame corresponding to an specific
+#' satellite and path-row.
+#'
+#' @param sat_name a character(1). The name of a satellite.
+#' @param path_row a character(1). The location of the the wanted observation.
+#' @param data_df a data frame with observations.
+#'
+#' @return a data frame similar to the given one but with potentially fewer
+#' observation.
+#'
+#' @export
+#'
+get_sat_data_cell <- function(sat_name, path_row, data_df) {
+  stopifnot(
+    "Satellite column not found!" = "satelite" %in% colnames(data_df)
+  )
+  stopifnot(
+    "Path-Row column not found!" = "satelite" %in% colnames(path_row)
+  )
+  x_df <- data_df
+  x_df <- x_df[c(x_df[["satelite"]]) == sat_name,]
+  x_df <- x_df[c(x_df[["path_row"]]) == path_row,]
+  x_df <- x_df[c("period", "path_row", "n")]
+
+  return(x_df)
+}
+
 
 #' Utilitary function to fit a linear model by month
 #'

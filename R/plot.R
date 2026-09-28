@@ -8,6 +8,8 @@
 #'
 #' @return A plot (ggplot2) object.
 #'
+#' @export
+#'
 get_plot_forecast_vs_obs <- function(obs_tb, forecast_tb) {
   stopifnot(
     "Missing columns in forecast data" =
@@ -409,6 +411,8 @@ get_plot_queimadas_forecast <- function(x_df, y_df, forecast_df) {
 #'
 #' @return A plot (ggplot2) object.
 #'
+#' @export
+#'
 get_plot_ref_sats <- function(x, y, data_df, lm_obj) {
   fit <- is_outlier <- lwr <- m <- upr <- NULL
   stopifnot(
@@ -485,6 +489,8 @@ get_plot_ref_sats <- function(x, y, data_df, lm_obj) {
 #' satellites.
 #'
 #' @return A plot (ggplot2) object.
+#'
+#' @export
 #'
 get_plot_ref_sats_01 <- function(x, y, data_df) {
   fit <- lwr <- m <- upr <- month <- NULL

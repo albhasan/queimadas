@@ -4,10 +4,12 @@
 \alias{get_lm_r2}
 \title{Get model's R squared}
 \usage{
-get_lm_r2(lm_obj)
+get_lm_r2(lm_obj, adjusted)
 }
 \arguments{
 \item{lm_obj}{a linear model object (stats package).}
+
+\item{adjusted}{a logical(1). Should we return the adjusted R squared?}
 }
 \value{
 a numeric.

@@ -1,6 +1,6 @@
 #!/bin/bash
 ###############################################################################
-# RUN SPATIAL JOINS BETWEEN THE ACTIVE FIRES FROM QUEIMADAS AND THE SPATAIL
+# RUN SPATIAL JOINS BETWEEN THE ACTIVE FIRES FROM QUEIMADAS AND THE SPATIAL
 # DIVISION
 ###############################################################################
 
