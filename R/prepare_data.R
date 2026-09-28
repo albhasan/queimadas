@@ -44,8 +44,6 @@ get_brazil <- function(db_con, table_name) {
 #' @return a DBI object. This object requires a call to `dplyr::collect()` to
 #' retrieve the actual data.
 #'
-#' @importFrom magrittr "%>%"
-#'
 #' @export
 #'
 get_brazil_year_month <- function(db_con, table_name) {
@@ -147,6 +145,50 @@ get_sat_pairs <- function(data_tb, satellites) {
       satelite_y %in% satellites[names(satellites) == "candidate"]
     ) |>
     dplyr::arrange(satelite_y)
+
+  return(res)
+}
+
+
+
+#' Get fire data from Brazil by year, month and grid cell
+#'
+#' @description
+#' Get data from the database coresponding to Brazil, excluding industrial
+#' areas, aggregated by year, month and grid cell.
+#'
+#' @param db_con a conection to a data base of queimadas.
+#' @param table_name name of the table in the data base.
+#'
+#' @return a DBI object. This object requires a call to `dplyr::collect()` to
+#' retrieve the actual data.
+#'
+#' @export
+#'
+get_brazil_year_month_cell <- function(db_con, table_name) {
+  afternoon <- data_pas <- satelite <- path_row <- period <- NULL
+
+  res <-
+    db_con |>
+    get_brazil(table_name = table_name) |>
+    dplyr::mutate(
+      period = stringr::str_sub(string = data_pas, start = 1L, end = 7L),
+      satelite = dplyr::if_else(
+        condition = satelite == "NPP-375" & afternoon == 1,
+        true = "NPP-375-PM",
+        false = satelite
+      ),
+      satelite = dplyr::if_else(
+        condition = satelite == "NPP-375" & afternoon == 0,
+        true = "NPP-375-AM",
+        false = satelite
+      )
+    ) |>
+    dplyr::select(satelite, period, path_row) |>
+    dplyr::summarize(
+      n = dplyr::n(),
+      .by = tidyselect::all_of(x = c("period", "satelite", "path_row"))
+    )
 
   return(res)
 }

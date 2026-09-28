@@ -14,6 +14,8 @@ out_dir <- "/home/alber/Documents/data/r_packages/queimadas"
 stopifnot("Output directory not found!" = dir.exists(out_dir))
 
 logger::log_info("Reading parameters...")
+out_dir <- "/home/alber/Documents/data/r_packages/queimadas"
+stopifnot("Output directory not found!" = dir.exists(out_dir))
 tmp_dir <- tempdir()
 zip_dir <- file.path(tmp_dir, "zip_dir")
 csv_dir <- file.path(out_dir, "csv")

@@ -34,14 +34,20 @@ get_lm_equation <- function(lm_obj, dig = 3) {
 #' Get the R squared coefficient from a regression object.
 #'
 #' @param lm_obj a linear model object (stats package).
+#' @param adjusted a logical(1). Should we return the adjusted R squared?
 #'
 #' @return a numeric.
 #'
 #' @export
 #'
-get_lm_r2 <- function(lm_obj) {
+get_lm_r2 <- function(lm_obj, adjusted) {
+  stopifnot("An lm object was expected!" = inherits(lm_obj, what = "lm"))
+  param <- "r.squared"
+  if (adjusted) {
+    param <- "adj.r.squared"
+  }
   s <- summary(lm_obj)
-  return(s[["r.squared"]])
+  return(s[[param]])
 }
 
 
