@@ -6,3 +6,7 @@ tags
 ^pkgdown$
 ^data-raw$
 [.]png$
+^slides$
+[.]tex$
+^.git$
+^.github$
