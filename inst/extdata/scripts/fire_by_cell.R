@@ -169,7 +169,9 @@ sat_01_tb <-
         purrr::map(
           .x = models_ls,
           .f = broom::tidy,
-          # TODO: check if broom computes the CI the same way as stats::predict
+          # NOTE: broom::tidy extracts data from the model as a tibble. It
+          # doesn't make computations. So the confidence level reported by it
+          # should be the same as computed by other means.
           conf.int = TRUE,
           conf.level = confidence_level
         ) |>
@@ -272,5 +274,6 @@ out_file <-
 
 sat_01_tb |>
   dplyr::mutate(path_row = file_path_row) |>
-  dplyr::select(path_row, satelite_x, satelite_y, lm_01_model_param, rsquared) |>
+  dplyr::select(path_row, satelite_x, satelite_y, lm_01_model_param, rsquared,
+                forecast_01_df) |>
   saveRDS(file = out_file)

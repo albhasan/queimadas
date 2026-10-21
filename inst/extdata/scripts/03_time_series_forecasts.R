@@ -1,14 +1,20 @@
 library(dplyr)
 library(forecast)
+library(logger)
 library(purrr)
 library(tibble)
 library(lubridate)
 
 library(queimadas)
 
-# TODO: Add logging!
+logger::log_threshold(INFO)
+
+logger::log_info("Script 03_time_series_forescast.R staring...")
+
 
 #---- Configuration ----
+
+logger::log_info("Reading configuration...")
 
 sqlite_file <- "~/Documents/data/r_packages/queimadas/fire.sqlite"
 table_name <- "fire_foci"
@@ -36,8 +42,11 @@ plot_size_a4_ls <- queimadas::get_paper_size(name = "A4", orientation = "ls")
 
 #---- Database connection ----
 
+logger::log_info("Connecting to the database...")
 
 db_con <- DBI::dbConnect(RSQLite::SQLite(), dbname = sqlite_file)
+
+logger::log_info("Aggregating fire data by year and month...")
 
 brazil_ym_tb <-
   db_con |>
@@ -45,8 +54,12 @@ brazil_ym_tb <-
   dplyr::filter(satelite %in% ref_satellite) |>
   dplyr::collect()
 
+logger::log_info("Closing database connection...")
+
 DBI::dbDisconnect(conn = db_con)
 rm(db_con)
+
+logger::log_info("Casting data to well-formed dates...")
 
 brazil_ym_tb <-
   brazil_ym_tb |>
@@ -60,7 +73,8 @@ time_points <-
   brazil_ym_tb |>
   dplyr::select(ds)
 
-# Split data into tibbles by satelite.
+logger::log_info("Splitting data by satelite...")
+
 data_tb_ls <-
   brazil_ym_tb |>
   dplyr::arrange(ds) |>
@@ -83,6 +97,7 @@ rm(data_tb_ls)
 
 #---- Test for trend and seasonality ----
 
+logger::log_info("Testing for trends and seasonalities...")
 
 # Visual test
 for (x in satellite_tb[["data"]]) {
@@ -103,6 +118,8 @@ for (x in satellite_tb[["data"]]) {
 
 #---- Component analysis ----
 
+logger::log_info("Running component analysis...")
+
 for (x in satellite_tb[["data"]]) {
   x_satellite <- paste(unique(x[["satelite"]]), collapse = "-")
   plot_ls <- component_analysis(train_tb = x)
@@ -120,6 +137,8 @@ for (x in satellite_tb[["data"]]) {
 
 #---- Test if the residuals have a normal distribution ----
 
+logger::log_info("Testing if residuals have a normal distribution...")
+
 for (x in satellite_tb[["data"]]) {
   plot_ls <- test_normal_residuals(train_tb = x)
   x_satellite <- paste(unique(x[["satelite"]]), collapse = "-")
@@ -136,6 +155,8 @@ for (x in satellite_tb[["data"]]) {
 
 
 #---- Autocorrelation ----
+
+logger::log_info("Estimating autocorrelations...")
 
 for (x in satellite_tb[["data"]]) {
   x_satellite <- paste(unique(x[["satelite"]]), collapse = "-")
@@ -155,11 +176,13 @@ for (x in satellite_tb[["data"]]) {
       y = "Number of events"
     )
 
-  ggplot2::ggsave(
-    filename = file.path(
+  plot_file <- file.path(
       out_dir,
       paste0("plot_autocorrelation", "_", x_satellite, ".png")
-    ),
+    )
+  logger::log_info("Saving autocorrelation plot to: ", plot_file)
+  ggplot2::ggsave(
+    filename = plot_file,
     plot = p,
     width = plot_size_a5_ls[["width"]],
     height = plot_size_a5_ls[["height"]],
@@ -169,6 +192,8 @@ for (x in satellite_tb[["data"]]) {
 
 
 #---- Forecast ----
+
+logger::log_info("Forecasting...")
 
 satellite_tb <-
   satellite_tb |>
@@ -203,10 +228,12 @@ for (r in seq_len(nrow(satellite_tb))) {
       y = "Number of events"
     )
   print(p)
-  ggplot2::ggsave(
-    filename = file.path(
+  plot_file <- file.path(
       out_dir, paste0("plot_forecast", "_", x_satellite, ".png")
-    ),
+    )
+  logger::log_info("Saving forescast plot to: ", plot_file)
+  ggplot2::ggsave(
+    filename = plot_file,
     plot = p,
     width = plot_size_a5_ls[["width"]],
     height = plot_size_a5_ls[["height"]],
@@ -216,6 +243,8 @@ for (r in seq_len(nrow(satellite_tb))) {
 
 
 #---- Compare ----
+
+logger::log_info("Comparing forecasts...")
 
 # NOTE: The best looking forecast belongs to NPP-375-PM!
 
@@ -248,11 +277,13 @@ plot_fc_vs_obs <-
     x = "Time",
     y = "Number of events"
   )
-
-ggplot2::ggsave(
-  filename = file.path(
+plot_file <-
+  file.path(
     out_dir, paste0("plot_fc_", ref_fc, "_vs_obs.png")
-  ),
+  )
+logger::log_info("Saving forecast-versus-observations plot to: ", plot_file)
+ggplot2::ggsave(
+  filename = plot_file,
   plot = plot_fc_vs_obs,
   width = plot_size_a5_ls[["width"]],
   height = plot_size_a5_ls[["height"]],
@@ -289,10 +320,13 @@ for (x_satellite in satellite_tb[["name"]]) {
       x = "Time",
       y = "Number of events"
     )
+  plot_file <-
+    file.path(
+    out_dir, paste0("plot_fc_", ref_fc, "_vs_obs_", x_satellite, ".png")
+  )
+  logger::log_info("Saving forecast-versus-observations plot to: ", plot_file)
   ggplot2::ggsave(
-    filename = file.path(
-      out_dir, paste0("plot_fc_", ref_fc, "_vs_obs_", x_satellite, ".png")
-    ),
+    filename = plot_file,
     plot = plot_fc_vs_obs,
     width = plot_size_a5_ls[["width"]],
     height = plot_size_a5_ls[["height"]],
@@ -355,10 +389,13 @@ for (x_satellite in satellite_tb[["name"]]) {
       x = "Time",
       y = "Residual"
     )
-  ggplot2::ggsave(
-    filename = file.path(
+  plot_file <-
+    file.path(
       out_dir, paste0("plot_res_obs_", x_satellite, "_vs_fc_", ref_fc, ".png")
-    ),
+    )
+  logger::log_info("Saving residuals-versus-forecast plot to: ", plot_file)
+  ggplot2::ggsave(
+    filename = plot_file,
     plot = plot_res_obs_fc,
     width = plot_size_a5_ls[["width"]],
     height = plot_size_a5_ls[["height"]],

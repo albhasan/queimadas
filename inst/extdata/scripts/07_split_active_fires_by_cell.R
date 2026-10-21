@@ -2,6 +2,8 @@ library(DBI)
 library(dplyr)
 library(tidyr)
 
+library(queimadas)
+
 sqlite_file <-
     "/home/alber/Documents/data/r_packages/queimadas/fire_grid.sqlite"
 table_name <- "fire_foci_grid"

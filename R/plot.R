@@ -414,12 +414,14 @@ get_plot_queimadas_forecast <- function(x_df, y_df, forecast_df) {
 #' @param data_df a data frame with overlapping observations of reference
 #' satellites.
 #' @param lm_obj a regression object (see `stats::lm`).
+#' @param use_adj_rsqr a logical(1). Should we add the adjusted R square to the
+#' plot? Otherwise, add R squared.
 #'
 #' @return A plot (ggplot2) object.
 #'
 #' @export
 #'
-get_plot_ref_sats <- function(x, y, data_df, lm_obj) {
+get_plot_ref_sats <- function(x, y, data_df, lm_obj, use_adj_rsqr) {
   fit <- is_outlier <- lwr <- m <- upr <- NULL
   stopifnot(
     "Required columns not found!" =
@@ -468,7 +470,7 @@ get_plot_ref_sats <- function(x, y, data_df, lm_obj) {
         label = sprintf(
           "%s\nr2 = %s",
           get_lm_equation(lm_obj, dig = 2),
-          round(get_lm_r2(lm_obj), digits = 2)
+          round(get_lm_r2(lm_obj, adjusted = use_adj_rsqr), digits = 2)
         ),
         parse = TRUE
       )

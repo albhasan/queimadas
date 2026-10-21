@@ -132,14 +132,15 @@ get_sat_pairs <- function(data_tb, satellites) {
   satelite <- satelite_x <- satelite_y <- NULL
   . <- NULL
 
-  # TODO: Remove magrittr dependency!
   res <-
     data_tb |>
     dplyr::select(satelite) |>
     dplyr::distinct(satelite) |>
     dplyr::filter(satelite %in% satellites) |>
-    dplyr::pull(satelite) %>%
-    tidyr::expand_grid(satelite_x = ., satelite_y = .) |>
+    dplyr::pull(satelite)
+
+  res <-
+    tidyr::expand_grid(satelite_x = res, satelite_y = res) |>
     dplyr::filter(
       satelite_x != satelite_y,
       satelite_y %in% satellites[names(satellites) == "candidate"]

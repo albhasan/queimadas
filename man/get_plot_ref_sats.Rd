@@ -4,7 +4,7 @@
 \alias{get_plot_ref_sats}
 \title{Get a regression plot between reference satellites}
 \usage{
-get_plot_ref_sats(x, y, data_df, lm_obj)
+get_plot_ref_sats(x, y, data_df, lm_obj, use_adj_rsqr)
 }
 \arguments{
 \item{x, y}{a character(1). Name of a reference satellite.}
@@ -13,6 +13,9 @@ get_plot_ref_sats(x, y, data_df, lm_obj)
 satellites.}
 
 \item{lm_obj}{a regression object (see \code{stats::lm}).}
+
+\item{use_adj_rsqr}{a logical(1). Should we add the adjusted R square to the
+plot? Otherwise, add R squared.}
 }
 \value{
 A plot (ggplot2) object.

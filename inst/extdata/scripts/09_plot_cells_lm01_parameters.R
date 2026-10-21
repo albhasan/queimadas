@@ -5,6 +5,7 @@ library(purrr)
 library(sf)
 library(tidyr)
 
+library(queimadas)
 
 
 #---- Configuration ----
@@ -25,6 +26,26 @@ stopifnot(
 )
 
 plot_size_a5_ls <- get_paper_size(name = "A5", orientation = "ls")
+
+# Breaks used for ploting data.
+pvalue_breaks_tb <- tibble::tibble(
+  pbreaks = sort(c(-Inf, -1, -0.10, -0.05, -0.01, 0.01, 0.05, 0.10, 1, Inf)),
+  pcolors = scales::viridis_pal(option = "magma")(length(pbreaks)),
+  pnames = c(
+    NA,
+    "p >= -1.00",
+    "p >= -0.10",
+    "p >= -0.05",
+    "p >= -0.01",
+    "p >= 0.01",
+    "p >= 0.05",
+    "p >= 0.10",
+    "p >= 1.00",
+    NA
+  )
+)
+
+
 
 #---- Utility functions ----
 
@@ -66,29 +87,71 @@ sp_join_month <- function(dat, grid_sf) {
   return(x)
 }
 
-
-
-#' Helper funciton. Get a base map
+#' Helper function Get a base map
 #' 
 #' @description 
-#' Helper funciton for getting a base map givne the plot data.
+#' Helper function for getting a base map givne the plot data.
 #'
 #' @param plot_data an sf object.
 #' @param var name of a variable in plot_data.
 #'
 #' @return a ggplot2 object.
 #'
-get_base_plot <- function(plot_data, var) {
+get_base_map <- function(plot_data, var) {
   p <-
     ggplot2::ggplot() +
     ggplot2::geom_sf(
-      data = plot_data,
+      data = drop_na(plot_data),
       mapping = ggplot2::aes(fill = {{ var }})
     )
   return(p)
 }
 
+#' Helper function. Get a base plot of the frequency of categories of p-values
+#'
+#' @description 
+#' Helper function for creating a histogram of the frequency of the categories
+#' of p-values in the grid.
+#'
+#' @param plot_data a tibble. Data for the plot.
+#' colors.
+#'
+#' @return a ggplto2 object.
+#'
+get_base_hist <- function(plot_data) {
+  p <-
+    plot_data |>
+    sf::st_drop_geometry() |>
+    tidyr::drop_na(rsqr_adj) |>
+    ggplot2::ggplot() +
+    ggplot2::geom_bar(
+      mapping = ggplot2::aes(
+        y = pinterval,
+        fill = pcolor
+      )
+    ) +
+    ggplot2::theme(legend.position = "none") +
+    ggplot2::labs(
+      x = "Frequency (number of cells)",
+      y = "p-value"
+    )
+  return(p)
+}
 
+#' Get the inteval's name
+#'
+#' @description
+#' Given a value and an sorted numeric of breaks, return the name corresponding
+#' to x's interval.
+#'
+#' @param x a numeric.
+#' @param breaks a numeric (see `base::findInterval`)
+#' @param bnames a character. The names for each interval defined by the given
+#' breaks.
+#'
+find_interval_name <- function(x, breaks, bnames) {
+  return(bnames[findInterval(x = x, vec = breaks)])
+}
 
 
 #---- Script ----
@@ -134,13 +197,14 @@ data_tb <-
   ) |>
   tidyr::unnest(data_tb)
 
-# Get the R squared data ready or plot.
+# Get the R squared data ready for plotting.
 rsquared_tb <-
   data_tb |>
   dplyr::select(path_row, satelite_x, satelite_y, rsquared) |>
   tidyr::unnest(rsquared) |>
   dplyr::group_by(satelite_x, satelite_y) |>
   tidyr::nest(.key = "dat") |>
+  # Join the data to the grid. 
   dplyr::mutate(
     sp_join = purrr::map(
       .x = dat,
@@ -150,18 +214,49 @@ rsquared_tb <-
   ) |>
   dplyr::select(satelite_x, satelite_y, sp_join) |>
   tidyr::unnest(sp_join) |>
-  # Get a basic plot of the data.
+  # Recode the p-values into classes.
   dplyr::mutate(
-    plot_rsqr_adj = purrr::map(
+    plot_data = purrr::map(
       .x = plot_data,
-      .f = get_base_plot,
-      var = rsqr_adj
+      .f = function(plot_data, breaks_tb) {
+        plot_data <- 
+          plot_data |> 
+          dplyr::mutate(
+            pinterval = purrr::map_chr(
+              .x = rsqr_adj,
+              .f = find_interval_name,
+              breaks = breaks_tb[["pbreaks"]],
+              bnames = breaks_tb[["pnames"]]
+            ),
+            pinterval = factor(
+              x = pinterval,
+              levels = breaks_tb[["pnames"]],
+              ordered = TRUE
+            ),
+            pcolor = breaks_tb[["pcolors"]][pinterval]
+          ) 
+        return(plot_data)
+      },
+      breaks_tb = pvalue_breaks_tb
+    )
+  )
+
+# Get the grid plots.
+rsquared_tb <-
+  rsquared_tb |>
+  # Get a basic map of the data on the grid. 
+  dplyr::mutate(
+    plot_rsqr_adj_grid = purrr::map(
+      .x = plot_data,
+      .f = get_base_map,
+      #var = rsqr_adj,
+      var = pinterval
     )
   ) |>
-  # Create a file name for storing each plot.
+  # Create file names for storing grid plots.
   dplyr::mutate(
-    title = sprintf("x: %s, y: %s, %s", satelite_x, satelite_y, month),
-    out_file = file.path(
+    title_plot_grid = sprintf("x: %s, y: %s, %s", satelite_x, satelite_y, month),
+    out_file_grid = file.path(
       grid_dir,
       paste0(
         "plot_grid_x_",
@@ -174,22 +269,78 @@ rsquared_tb <-
       )
     )
   ) |>
-  # Add a title to each plot.
+  # Add a title to each grid plot.
   dplyr::mutate(
-      plot_rsqr_adj = purrr::map2(
-        .x = plot_rsqr_adj,
-        .y = title,
+      plot_rsqr_adj_grid = purrr::map2(
+        .x = plot_rsqr_adj_grid,
+        .y = title_plot_grid,
         .f = function(plot_obj, title) {
           plot_obj +
             ggplot2::labs(title = title)
         }
       )  
   ) |>
-  # Write to disc.
+  # Write grid plots to disc.
   dplyr::mutate(
-    written_to = purrr::map2_chr(
-      .x = plot_rsqr_adj,
-      .y = out_file,
+    plot_rsqr_adj_grid_written_to = purrr::map2_chr(
+      .x = plot_rsqr_adj_grid,
+      .y = out_file_grid,
+      .f = function(plot, file, size) {
+        ggplot2::ggsave(
+          filename = file,
+          plot = plot,
+          width = size[["width"]],
+          height = size[["height"]],
+          units = size[["units"]]
+        )
+        return(file)
+      },
+      size = plot_size_a5_ls
+    )
+  )
+
+# Get the frequency plots.
+rsquared_tb <-
+  rsquared_tb |>
+  # Add the Adjusted R squared frequency plot.
+  dplyr::mutate(
+    plot_rsqr_adj_hist = purrr::map(
+      .x = plot_data,
+      .f = get_base_hist
+    )
+  ) |>
+  # Create file names for storing each frequency plot.
+  dplyr::mutate(
+    title_plot_hist = sprintf("x: %s, y: %s, %s", satelite_x, satelite_y, month),
+    out_file_hist = file.path(
+      grid_dir,
+      paste0(
+        "plot_hist_x_",
+        satelite_x,
+        "_y_",
+        satelite_y,
+        "_",
+        month,
+        "_rsqr-adj.png"
+      )
+    )
+  ) |>
+  # Add a title to each frequency plot.
+  dplyr::mutate(
+      plot_rsqr_adj_hist = purrr::map2(
+        .x = plot_rsqr_adj_hist,
+        .y = title_plot_hist,
+        .f = function(plot_obj, title) {
+          plot_obj +
+            ggplot2::labs(title = title)
+        }
+      )  
+  ) |>
+  # Write to frequancy plots to disc.
+  dplyr::mutate(
+    plot_rsqr_adj_hist_written_to = purrr::map2_chr(
+      .x = plot_rsqr_adj_hist,
+      .y = out_file_hist,
       .f = function(plot, file, size) {
         ggplot2::ggsave(
           filename = file,
@@ -232,12 +383,12 @@ lm_param_tb <-
   dplyr::mutate(
     plot_estimate = purrr::map(
       .x = plot_data,
-      .f = get_base_plot,
+      .f = get_base_map,
       var = estimate
     ),
     plot_pvalue = purrr::map(
       .x = plot_data,
-      .f = get_base_plot,
+      .f = get_base_map,
       var = p.value
     )
   ) |>

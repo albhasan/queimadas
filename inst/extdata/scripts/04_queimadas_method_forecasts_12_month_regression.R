@@ -47,11 +47,12 @@ sat_char <- c(
   "NPP-375D"
 )
 
-# TODO: Add to figures!
+# TODO: Add to satellites operational lives to figures.
 # https://space.oscar.wmo.int/satellites/view/aqua
 # https://space.oscar.wmo.int/satellites/view/noaa_12
 # https://space.oscar.wmo.int/satellites/view/terra
 # https://space.oscar.wmo.int/satellites/view/snpp
+
 sat_metadata <- tibble::tribble(
   ~name,     ~launch,      ~elo,
   "AQUA",    "2002-05-04", ">2026",
@@ -207,7 +208,8 @@ sat_01_tb <-
         purrr::map(
           .x = models_ls,
           .f = broom::tidy,
-          # TODO: check if broom computes the CI the same way as stats::predict
+          # NOTE: broom::tidy just convert outputs into tibbles. It doesn't
+          # make computations.
           conf.int = TRUE,
           conf.level = confidence_level
         ) |>
@@ -525,7 +527,7 @@ lm_12_param_tb <-
     r2 = purrr::map_chr(
       .x = lm_12,
       .f = function(x) {
-        sprintf("%.2f", get_lm_r2(lm_obj = x))
+        sprintf("%.2f", get_lm_r2(lm_obj = x, adjusted = TRUE))
       }
     )
   ) |>
@@ -706,7 +708,7 @@ for (i in seq_len(nrow(sat_tb))) {
 }
 
 # NOTE: Regression curve by region?
-# TODO: Regression by cell.
+# DONE: Regression by cell.
 
 # no caso do aqua voltar ate 1998
 # correlacao de pearson da regiao sul
