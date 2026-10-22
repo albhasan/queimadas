@@ -1,6 +1,6 @@
 #' Metadata from Brazilian states
 #'
-#' Metadata from Brazilian states which could provide additional levels of
+#' Metadata from Brazilian states (2025) which could provide additional levels of
 #' aggregation.
 #'
 #' @format ## `brstate_tb`

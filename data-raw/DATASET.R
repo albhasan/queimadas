@@ -3,8 +3,15 @@ library(geobr)
 library(sf)
 
 brstate_tb <-
-  geobr::read_state() %>%
-  sf::st_drop_geometry()
+  geobr::read_state(year = 2025) |>
+  sf::st_drop_geometry() |>
+  dplyr::select(
+    code_state,
+    abbrev_state,
+    name_state,
+    code_region,
+    name_region
+  )
 
 grid_gpk <- "/home/alber/Documents/data/r_packages/queimadas/grade_tm_util.gpkg"
 stopifnot("Grid geopackage not found!" = file.exists(grid_gpk))
