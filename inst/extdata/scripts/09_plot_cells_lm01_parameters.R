@@ -7,6 +7,9 @@ library(tidyr)
 
 library(queimadas)
 
+# TODO: There are many gaps in the grid. To fill them in, try using the
+#       12-month regression parameters when there is no way to use the 1-month
+#       regression.
 
 #---- Configuration ----
 
@@ -21,7 +24,7 @@ out_dir <- "/home/alber/Documents/github/slides/queimadas/slides/figures"
 grid_dir <- file.path(out_dir, "grid")
 stopifnot("Output directory not found!" = dir.exists(out_dir))
 stopifnot(
-  "Output directory for grid figures not found!" = 
+  "Output directory for grid figures not found!" =
   dir.exists(grid_dir)
 )
 
@@ -88,8 +91,8 @@ sp_join_month <- function(dat, grid_sf) {
 }
 
 #' Helper function Get a base map
-#' 
-#' @description 
+#'
+#' @description
 #' Helper function for getting a base map givne the plot data.
 #'
 #' @param plot_data an sf object.
@@ -109,7 +112,7 @@ get_base_map <- function(plot_data, var) {
 
 #' Helper function. Get a base plot of the frequency of categories of p-values
 #'
-#' @description 
+#' @description
 #' Helper function for creating a histogram of the frequency of the categories
 #' of p-values in the grid.
 #'
@@ -166,7 +169,7 @@ grid_sf <-
 biomes_sf <- geobr::read_biomes(year = 2025, simplified = TRUE)
 biomes_sf <- sf::st_transform(biomes_sf, crs = sf::st_crs(grid_sf))
 
-# Get the path & rows covering Brazil. 
+# Get the path & rows covering Brazil.
 path_row_br <-
   grid_sf |>
   sf::st_intersection(y = biomes_sf) |>
@@ -204,7 +207,7 @@ rsquared_tb <-
   tidyr::unnest(rsquared) |>
   dplyr::group_by(satelite_x, satelite_y) |>
   tidyr::nest(.key = "dat") |>
-  # Join the data to the grid. 
+  # Join the data to the grid.
   dplyr::mutate(
     sp_join = purrr::map(
       .x = dat,
@@ -219,8 +222,8 @@ rsquared_tb <-
     plot_data = purrr::map(
       .x = plot_data,
       .f = function(plot_data, breaks_tb) {
-        plot_data <- 
-          plot_data |> 
+        plot_data <-
+          plot_data |>
           dplyr::mutate(
             pinterval = purrr::map_chr(
               .x = rsqr_adj,
@@ -234,7 +237,7 @@ rsquared_tb <-
               ordered = TRUE
             ),
             pcolor = breaks_tb[["pcolors"]][pinterval]
-          ) 
+          )
         return(plot_data)
       },
       breaks_tb = pvalue_breaks_tb
@@ -244,7 +247,7 @@ rsquared_tb <-
 # Get the grid plots.
 rsquared_tb <-
   rsquared_tb |>
-  # Get a basic map of the data on the grid. 
+  # Get a basic map of the data on the grid.
   dplyr::mutate(
     plot_rsqr_adj_grid = purrr::map(
       .x = plot_data,
@@ -278,7 +281,7 @@ rsquared_tb <-
           plot_obj +
             ggplot2::labs(title = title)
         }
-      )  
+      )
   ) |>
   # Write grid plots to disc.
   dplyr::mutate(
@@ -334,7 +337,7 @@ rsquared_tb <-
           plot_obj +
             ggplot2::labs(title = title)
         }
-      )  
+      )
   ) |>
   # Write to frequancy plots to disc.
   dplyr::mutate(
@@ -432,7 +435,7 @@ lm_param_tb <-
           plot_obj +
             ggplot2::labs(title = title)
         }
-      )  
+      )
   ) |>
   # Write to disc.
   dplyr::mutate(

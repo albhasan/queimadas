@@ -47,7 +47,7 @@ sat_char <- c(
   "NPP-375D"
 )
 
-# TODO: Add to satellites operational lives to figures.
+# TODO: Add satellites operational lives to figures.
 # https://space.oscar.wmo.int/satellites/view/aqua
 # https://space.oscar.wmo.int/satellites/view/noaa_12
 # https://space.oscar.wmo.int/satellites/view/terra
