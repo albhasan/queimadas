@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 ###############################################################################
-# PROCESS THE ACTIVE FIRES IN EACH CELL
+# RUN REGRESSIONS ON THE ACTIVE FIRES IN EACH CELL IN THE GRID
 #------------------------------------------------------------------------------
 # ./fire_by_cell.R
 # -f /home/alber/Documents/results/r_packages/queimadas/cell_ts/active-fires_233_067.RDS
@@ -135,14 +135,13 @@ sat_tb <-
 
 
 
-#---- 01-month regressions ----
+#---- Fit regressions models ----
 
-# Fit regression models.
-sat_01_tb <-
+sat_lm_tb <-
   sat_tb |>
+  #NOTE: 01 month regressions start here.
   # Fit a linear model using overlapping x & y data.
   dplyr::mutate(
-    # Fit a model for each month.
     lm_data_month = purrr::map2(
       .x = x_df,
       .y = y_df,
@@ -173,7 +172,7 @@ sat_01_tb <-
     )
   ) |>
   dplyr::select(-lm_data_month) |>
-  # Compute models statistics r squred and adjusted r squared.
+  # Compute models statistics r-squred and adjusted r-squared.
   dplyr::mutate(
     rsquared_01 = purrr::map(
       .x = lm_01_models,
@@ -215,17 +214,6 @@ sat_01_tb <-
       }
     )
   ) |>
-  # Create plots for the 12 models of each row.
-  # dplyr::mutate(
-  #   plot_lm_01 = purrr::pmap(
-  #     .l = list(
-  #       x = satelite_x,
-  #       y = satelite_y,
-  #       data_df = lm_01_data
-  #     ),
-  #     .f = get_plot_ref_sats_01
-  #   )
-  # ) |>
   # Keep satellite combinations that have enough models (12).
   dplyr::mutate(
     n_models_01 = purrr::map_int(
@@ -233,13 +221,15 @@ sat_01_tb <-
       .f = length
     )
   ) |>
-  dplyr::filter(n_models_01 == 12) |>
   # Predict future and past using the fitted models.
   dplyr::mutate(
     forecast_01_df = purrr::map2(
       .x = lm_01_models,
       .y = x_df,
       .f = function(lm_ls, x_df) {
+        if(length(lm_ls) != 12){
+          return(NA)
+        }
         pred_ls <- predict_ci_01(
           lm_ls = lm_ls,
           new_data = x_df,
@@ -251,68 +241,7 @@ sat_01_tb <-
       }
     )
   ) |>
-  # Plot forecast month by month.
-  dplyr::mutate(
-    plot_queimadas_01 = purrr::pmap(
-      .l = list(
-        x_df = x_df,
-        y_df = y_df,
-        forecast_df = forecast_01_df
-      ),
-      .f = get_plot_queimadas_forecast
-    )
-  )
-
-
-# Write forecast plots to disc.
-# for (i in seq_len(nrow(sat_01_tb))) {
-#   sat_x <- sat_01_tb[["satelite_x"]][[i]]
-#   sat_y <- sat_01_tb[["satelite_y"]][[i]]
-#   #p <- sat_01_tb[["plot_lm_01"]][[i]]
-#   p <- sat_01_tb[["plot_queimadas_01"]][[i]]
-#   plot_file <- file.path(
-#     out_dir,
-#     paste0(
-#       "plot_queimadas_lm_01_",
-#       sat_y, "_along_", sat_x, "_", file_path_row,
-#       ".png"
-#     )
-#   )
-#   ggplot2::ggsave(
-#     filename = plot_file,
-#     plot = p,
-#     width = plot_size_a5_ls[["width"]],
-#     height = plot_size_a5_ls[["height"]],
-#     units = plot_size_a5_ls[["units"]]
-#   )
-# }
-
-# Save a table with regression parameters.
-
-out_file <-
-  file.path(
-    out_dir,
-    paste0(
-      get_base_file_name(rds_file),
-      "_lm_01.RDS"
-    )
-  )
-
-sat_01_tb |>
-  dplyr::mutate(path_row = get_file_path_row(rds_file)) |>
-  dplyr::select(
-    path_row, satelite_x, satelite_y, lm_01_model_param, rsquared_01,
-    forecast_01_df
-  ) |>
-  saveRDS(file = out_file)
-
-
-
-#---- 12-month regressions ----
-
-# Fit regression models.
-sat_12_tb <-
-  sat_tb |>
+  #NOTE: 12 month regressions start here.
   # Fit a linear model usin x & y data.
   dplyr::mutate(
     lm_data_month = purrr::map2(
@@ -371,13 +300,16 @@ sat_12_tb <-
       }
     )
   ) |>
-  dplyr::filter(n_models_12 == 1) |>
+  #dplyr::filter(n_models_12 == 1) |>
   # Predict future and past using the fitted models.
   dplyr::mutate(
     forecast_12_df = purrr::map2(
       .x = lm_12_models,
       .y = x_df,
       .f = function(lm_model, x_df) {
+        if(inherits(x = lm_model, what = "lm") == FALSE){
+          return(NA)
+        }
         predict_mt <-
           predict_ci(
             lm_obj = lm_model,
@@ -397,14 +329,10 @@ out_file <-
     out_dir,
     paste0(
       get_base_file_name(rds_file),
-      "_lm_12.RDS"
+      "_lm.RDS"
     )
   )
 
-sat_12_tb |>
+sat_lm_tb |>
   dplyr::mutate(path_row = get_file_path_row(rds_file)) |>
-  dplyr::select(
-    path_row, satelite_x, satelite_y, lm_12_model_param, rsquared_12,
-    forecast_12_df
-  ) |>
   saveRDS(file = out_file)

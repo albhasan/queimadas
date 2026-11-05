@@ -1,6 +1,6 @@
 Package: queimadas
 Title: Statistics from the Brazilian Queimadas Program
-Version: 0.0.0.9018
+Version: 0.0.0.9022
 Authors@R:
     person("Alber", "Sanchez", , "alber.ipia@inpe.br", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7966-2880"))
@@ -28,8 +28,10 @@ Imports:
     magrittr,
     purrr,
     readr,
+    RSQLite,
     rvest,
     prophet,
+    sf,
     stats,
     stringr,
     tibble,
