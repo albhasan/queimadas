@@ -58,7 +58,8 @@ brazil_ym_tb <-
   get_brazil_year_month(table_name = table_name) |>
   dplyr::collect()
 
-# TODO: Check if the AM/PM separation was already done.
+# NOTE: The AM/PM separation is implicit as D means the whole day of
+#       observations and PM means afternoon observations.
 # NOTE: There are only afternoon NPP-375 observations (NPP-375-PM).
 # NOTE: In NPP-375D, the D stands for "Diurno".
 sats <- sort(unique(brazil_ym_tb$satelite))

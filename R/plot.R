@@ -667,3 +667,202 @@ get_plot_ts_with_bfast_break <- function(bfast_ts_tb, bfast_top_tb, break_lines)
     )
   return(p)
 }
+
+
+
+#' Helper function for getting a base map
+#'
+#' @description
+#' Helper function for getting a base map given the plot data.
+#'
+#' @param plot_data an sf object.
+#' @param var name of a variable in plot_data.
+#'
+#' @return a ggplot2 object.
+#'
+#' @export
+#'
+get_base_map <- function(plot_data, var) {
+  p <-
+    ggplot2::ggplot() +
+    ggplot2::geom_sf(
+      data = tidyr::drop_na(plot_data),
+      mapping = ggplot2::aes(fill = {{ var }}),
+      show.legend = TRUE
+    )
+  return(p)
+}
+
+
+
+#' Helper function. Get a base plot of the frequency of categories of p-values
+#'
+#' @description
+#' Helper function for creating a histogram of the frequency of the categories
+#' of p-values in the grid.
+#'
+#' @param plot_data a tibble. Data for the plot.
+#' colors.
+#'
+#' @return a ggplto2 object.
+#'
+#' @export
+#'
+get_base_hist <- function(plot_data) {
+  pcolor <- pinterval <- rsqr_adj <- NULL
+  p <-
+    plot_data |>
+    sf::st_drop_geometry() |>
+    tidyr::drop_na(rsqr_adj) |>
+    ggplot2::ggplot() +
+    ggplot2::geom_bar(
+      mapping = ggplot2::aes(
+        y = pinterval,
+        fill = pcolor
+      )
+    ) +
+    ggplot2::theme(legend.position = "none") +
+    ggplot2::labs(
+      x = "Frequency (number of cells)",
+      y = "p-value"
+    )
+  return(p)
+}
+
+
+
+#' Get a plot of the given variable
+#'
+#' @description
+#' Given an sf object, build a ggplot2 object of the given variable.
+#'
+#' @param data_sf an `sf`` object.
+#' @param var a variable in `data_sf`.
+#' @param polygons_sf an `sf`` object which outline will be plot on top of
+#' `data_sf`.
+#'
+#' @return a `ggplot2` object.
+#'
+#' @export
+#'
+#'
+get_plot_sf <- function(data_sf, var, polygons_sf) {
+  get_base_map(
+    plot_data = data_sf,
+    var = {{var}}
+  ) +
+  ggplot2::geom_sf(
+    data = polygons_sf,
+    color = "black",
+    lwd = 0.6,
+    fill = NA,
+    show.legend = FALSE
+  )
+}
+
+
+#' Get a plot of the rsquare
+#'
+#' @description
+#' Util function. Get the monthly r-squared plots of the montly linear models.
+#'
+#' @param lm01_sp a tibble with 2 columns: the on with the month and the
+#' list-column with the plot data (`sf` objects).
+#' @param var a variable in the column `plot_data` of `lm01_sp`.
+#' @param polygons_sf an `sf`` object which outline will be plot on top of
+#' `data_sf`.
+#'
+#' @export
+#'
+get_plot_lm01_rsqr <- function(lm01_sp, var, polygons_sf) {
+  plot_data <- NULL
+  res <-
+    lm01_sp |>
+    dplyr::mutate(
+      plot_lm01_rsqr = purrr::map(
+        .x = plot_data,
+        .f = get_plot_sf,
+        # var = lm01_rsqr_adj,
+        var = {{var}},
+        polygons_sf = polygons_sf
+      )
+    )
+  return(res)
+}
+
+
+#' Get a plot of p.values
+#'
+#' @description
+#' Util function. Get a `ggplot2` object made of the spatial data in `dat_sf`
+#' using its column `var_pvalue` after being categorized usign the data in
+#' `breaks_tb`
+#'
+#' @param data_sf an `sf` object.
+#' @param breaks_tb a tibble with the categories for the p.values.
+#' @param var_pvalue a columnm in `data_sf` with the p.values.
+#' @param polygons_sf an `sf`` object which outline will be plot on top of
+#' `data_sf`.
+#'
+#' @return a `ggplot2` object.
+#'
+#' @export
+#'
+get_plot_lm_pvalues <- function(data_sf, breaks_tb, var_pvalue, polygons_sf) {
+  path_row <- pinterval <- NULL
+  p <-
+    data_sf |>
+    classify_pvalues(
+      breaks_tb = breaks_tb,
+      pvalue_col = {{var_pvalue}}
+    ) |>
+    dplyr::select(path_row, pinterval) |>
+    get_plot_sf(
+      var = pinterval,
+      polygons_sf = polygons_sf
+    )
+  return(p)
+}
+
+
+
+#' Get a plot of p.values for the montly models' parameters
+#'
+#' @description
+#' Get a `ggplot2` object for each `sp` object contained in it.
+#'
+#' @param lm_tb a tibble with a column (`plot_data`) of `sf` objects.
+#' @param breaks_tb a tibble with the categories for the p.values.
+#' @param var_pvalue_intercept,var_pvalue_slope a columnm in `data_sf` with
+#' the p.values for the intercept and the slope.
+#' @param polygons_sf an `sf`` object which outline will be plot on top of
+#'
+#' @return a tibble (`lm_tb`) with additional columns.
+#'
+#' @export
+#'
+get_plot_lm01_pvalues <- function(lm_tb, breaks_tb, var_pvalue_intercept,
+                                  var_pvalue_slope, polygons_sf){
+  plot_data <- NULL
+  p <-
+    lm_tb |>
+    dplyr::mutate(
+      plot_lm01_pvalue_intercept = purrr::map(
+        .x = plot_data,
+        .f = get_plot_lm_pvalues,
+        breaks_tb = breaks_tb,
+        #var_pvalue = lm01_lm01_pvalue_intercept,
+        var_pvalue = {{var_pvalue_intercept}},
+        polygons_sf = polygons_sf
+      ),
+      plot_lm01_pvalue_slope = purrr::map(
+        .x = plot_data,
+        .f = get_plot_lm_pvalues,
+        breaks_tb = breaks_tb,
+        #var_pvalue = lm01_lm01_pvalue_slope,
+        var_pvalue = {{var_pvalue_slope}},
+        polygons_sf = polygons_sf
+      )
+    )
+  return(p)
+}

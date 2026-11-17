@@ -36,18 +36,29 @@ get_lm_equation <- function(lm_obj, dig = 3) {
 #' @param lm_obj a linear model object (stats package).
 #' @param adjusted a logical(1). Should we return the adjusted R squared?
 #'
-#' @return a numeric.
+#' @return a numeric or NA.
 #'
 #' @export
 #'
 get_lm_r2 <- function(lm_obj, adjusted) {
-  stopifnot("An lm object was expected!" = inherits(lm_obj, what = "lm"))
-  param <- "r.squared"
-  if (adjusted) {
-    param <- "adj.r.squared"
+  if(length(lm_obj) == 1 && is.na(lm_obj)) {
+    return(NA)
+  } else if(inherits(x = lm_obj, what = "lm")) {
+    param <- "r.squared"
+    if (adjusted) {
+      param <- "adj.r.squared"
+    }
+    s <- summary(lm_obj)
+    return(s[[param]])
+  } else if(inherits(x = lm_obj, what = "list")) {
+    return(vapply(
+      X = lm_obj,
+      FUN = get_lm_r2,
+      FUN.VALUE = double(1),
+      adjusted = adjusted
+    ))
   }
-  s <- summary(lm_obj)
-  return(s[[param]])
+  stop("An lm (or list of them) was expected!")
 }
 
 

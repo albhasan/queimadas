@@ -150,7 +150,8 @@ sat_12_tb <-
         data_df = lm_12_data,
         lm_obj = lm_12
       ),
-      .f = get_plot_ref_sats
+      .f = get_plot_ref_sats,
+      use_adj_rsqr = TRUE
     )
   ) |>
   # Plot model prediction using the queimadas method.

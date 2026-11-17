@@ -1,3 +1,10 @@
+test_that("download_data works", {
+  skip_on_cran()
+  skip_if_offline()
+  expect_error(download_data(out_dir = "/my/fake/dir"))
+  #NOTE: Downloading the actual data would make this test take too much time!
+})
+
 test_that("get_data_url works", {
   data_url <- get_data_url()
   expect_length(object = data_url, n = 1)
@@ -35,13 +42,4 @@ test_that("get_data_url works", {
   skip_if_offline()
   # NOTE:Could INPE be temporaly off-line?
   expect_true(is_url_valid(get_data_url()))
-})
-
-# TODO: write more tests!
-
-test_that("download_data works", {
-  # skip_on_cran()
-  # skip_if_offline()
-  #
-  # expect_error(download_data(out_dir = "/my/fake/dir"))
 })

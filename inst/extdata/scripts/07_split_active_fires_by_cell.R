@@ -57,7 +57,7 @@ cell_tb <-
     .by = path_row
   ) |>
   dplyr::mutate(
-    out_file = purrr::map2(
+    out_file = purrr::map2_chr(
       .x = data,
       .y = path_row,
       .f = function(data, path_row, out_dir) {

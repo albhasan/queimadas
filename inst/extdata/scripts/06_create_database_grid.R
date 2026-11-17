@@ -1,6 +1,7 @@
 library(DBI)
 library(dplyr)
 library(purrr)
+library(logger)
 library(sf)
 library(stringr)
 library(tibble)
@@ -8,18 +9,29 @@ library(tools)
 
 library(queimadas)
 
+
+
 #---- Configuration ----
+
+logger::log_info("Reading configuration...")
 
 gpkg_dir <- "/home/alber/Documents/data/r_packages/queimadas/results/gpkg"
 stopifnot("Directory with GeoPackage data not found!" = dir.exists(gpkg_dir))
 
-sqlite_file <- "/home/alber/Documents/data/r_packages/queimadas/fire_grid.sqlite"
+sqlite_file <- 
+  "/home/alber/Documents/data/r_packages/queimadas/fire_grid.sqlite"
 if(file.exists(sqlite_file)) {
   stop("Database file already exists!")
 }
 table_name = "fire_foci_grid"
 
+
+
 #---- Get data from the database files ----
+
+logger::log_info(
+  "Export data from geopackage files into a non-spatial database..."
+)
 
 data_tb <- 
   gpkg_dir |>
@@ -38,43 +50,12 @@ data_tb <-
     )
   ) |>
   dplyr::mutate(
-    data_sf = purrr::map(
+    gpgk2 = purrr::map(
       .x = gpkg_file,
-      .f = sf::read_sf
+      .f =  sf_data_to_db,
+      sqlite_file = sqlite_file,
+      table_name = table_name
     )
-  ) |>
-  dplyr::mutate(
-    data_tb = purrr::map(
-      .x = data_sf,
-      .f = sf::st_drop_geometry
-    )
-  ) |>
-  dplyr::select(data_tb) |>
-  tidyr::unnest(data_tb)
-
-# Write data to a SQLite database.
-db_con <- DBI::dbConnect(RSQLite::SQLite(), dbname = sqlite_file)
-if (DBI::dbExistsTable(db_con, table_name)) {
-  stop(sprintf("The table %s already exists!", table_name))
-} else {
-  message(sprintf("Creating the table %s ...", table_name))
-}
-
-tryCatch({
-  message("Loading data to the database...")
-  DBI::dbWriteTable(
-    conn = db_con,
-    name = table_name, 
-    value = data_tb,
-    overwrite = FALSE,
-    append = TRUE
   )
-},
-error = function(e) {
-  message("Error while loading data to the database")
-},
-finally = {
-  message("Closing database's connection...")
-  DBI::dbDisconnect(db_con)
-  gc()
-})
+
+logger::log_info("Finishec!")

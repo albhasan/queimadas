@@ -3,6 +3,7 @@ library(geobr)
 library(ggplot2)
 library(purrr)
 library(sf)
+library(stringr)
 library(tidyr)
 
 library(queimadas)
@@ -13,20 +14,21 @@ library(queimadas)
 
 #---- Configuration ----
 
-rds_dir <- "/home/alber/Documents/results/r_packages/queimadas/cell_ts_lm01"
+rds_dir <- "/home/alber/Documents/results/r_packages/queimadas/cell_lm"
 stopifnot("Directory with RDS files not found!" = dir.exists(rds_dir))
 
 grid_gpkg <-
   "/home/alber/Documents/data/r_packages/queimadas/grade_tm_util.gpkg"
 stopifnot("Grid geopackages file not found!" = file.exists(grid_gpkg))
 
-out_dir <- "/home/alber/Documents/github/slides/queimadas/slides/figures"
-grid_dir <- file.path(out_dir, "grid")
+out_dir <- "/home/alber/Documents/github/slides/queimadas/slides"
 stopifnot("Output directory not found!" = dir.exists(out_dir))
-stopifnot(
-  "Output directory for grid figures not found!" =
-  dir.exists(grid_dir)
-)
+
+# grid_dir <- file.path(out_dir, "grid")
+# stopifnot(
+#   "Output directory for grid figures not found!" =
+#   dir.exists(grid_dir)
+# )
 
 plot_size_a5_ls <- get_paper_size(name = "A5", orientation = "ls")
 
@@ -50,114 +52,19 @@ pvalue_breaks_tb <- tibble::tibble(
 
 
 
-#---- Utility functions ----
-
-#' Get data for the monthly plots
-#'
-#' @description
-#' Helper function. Build monthly sf objects given a grid and a data frame of
-#' yearly data.
-#'
-#' @param dat a tibble.
-#' @param grid_sf an sf object representing a grid.
-#'
-#' @return a tibble.
-#'
-sp_join_month <- function(dat, grid_sf) {
-  stopifnot("Month column not found!" = "month" %in% colnames(dat))
-  x <-
-    dat |>
-      dplyr::group_by(month) |>
-      tidyr::nest(.key = "dat_month") |>
-      dplyr::mutate(
-        plot_data = purrr::map(
-          .x = dat_month,
-          .f = function(dat_month, grid_sf) {
-            res <-
-              grid_sf |>
-                dplyr::left_join(
-                  y = dat_month,
-                  by = "path_row",
-                  keep = FALSE
-                )
-                #dplyr::select(rsqr_adj)
-            return(res)
-          },
-          grid_sf = grid_sf
-        )
-      ) |>
-      dplyr::select(month, plot_data)
-  return(x)
-}
-
-#' Helper function Get a base map
-#'
-#' @description
-#' Helper function for getting a base map givne the plot data.
-#'
-#' @param plot_data an sf object.
-#' @param var name of a variable in plot_data.
-#'
-#' @return a ggplot2 object.
-#'
-get_base_map <- function(plot_data, var) {
-  p <-
-    ggplot2::ggplot() +
-    ggplot2::geom_sf(
-      data = drop_na(plot_data),
-      mapping = ggplot2::aes(fill = {{ var }})
-    )
-  return(p)
-}
-
-#' Helper function. Get a base plot of the frequency of categories of p-values
-#'
-#' @description
-#' Helper function for creating a histogram of the frequency of the categories
-#' of p-values in the grid.
-#'
-#' @param plot_data a tibble. Data for the plot.
-#' colors.
-#'
-#' @return a ggplto2 object.
-#'
-get_base_hist <- function(plot_data) {
-  p <-
-    plot_data |>
-    sf::st_drop_geometry() |>
-    tidyr::drop_na(rsqr_adj) |>
-    ggplot2::ggplot() +
-    ggplot2::geom_bar(
-      mapping = ggplot2::aes(
-        y = pinterval,
-        fill = pcolor
-      )
-    ) +
-    ggplot2::theme(legend.position = "none") +
-    ggplot2::labs(
-      x = "Frequency (number of cells)",
-      y = "p-value"
-    )
-  return(p)
-}
-
-#' Get the inteval's name
-#'
-#' @description
-#' Given a value and an sorted numeric of breaks, return the name corresponding
-#' to x's interval.
-#'
-#' @param x a numeric.
-#' @param breaks a numeric (see `base::findInterval`)
-#' @param bnames a character. The names for each interval defined by the given
-#' breaks.
-#'
-find_interval_name <- function(x, breaks, bnames) {
-  return(bnames[findInterval(x = x, vec = breaks)])
-}
-
-
 #---- Script ----
+
+# Ensure directories  exist.
+out_dir_figures <- file.path(out_dir, "figures_R")
+out_dir_tables <- file.path(out_dir, "tables_R")
+if (dir.exists(out_dir_figures) == FALSE){
+  dir.create(out_dir_figures)
+}
+if (dir.exists(out_dir_tables) == FALSE){
+  dir.create(out_dir_tables)
+}
+
+
 
 # Read the spatial grid.
 grid_sf <-
@@ -201,272 +108,268 @@ data_tb <-
   tidyr::unnest(data_tb)
 
 # Get the R squared data ready for plotting.
-rsquared_tb <-
+
+rsquared_lm12_tb <-
   data_tb |>
-  dplyr::select(path_row, satelite_x, satelite_y, rsquared) |>
-  tidyr::unnest(rsquared) |>
-  dplyr::group_by(satelite_x, satelite_y) |>
-  tidyr::nest(.key = "dat") |>
-  # Join the data to the grid.
+  dplyr::select(
+    path_row, satelite_x, satelite_y,
+    lm12 = rsquared_12,
+    lm_12_model_param
+  ) |>
+  tidyr::unnest(lm12, names_sep = "_") |>
   dplyr::mutate(
-    sp_join = purrr::map(
-      .x = dat,
+   pvalue_tb = purrr::map(
+      .x=  lm_12_model_param,
+      .f = get_pvalues_from_lm12_params,
+      prefix = "lm12_"
+    )
+  ) |>
+  tidyr::unnest(pvalue_tb) |>
+  tidyr::nest(
+    .by = tidyselect::all_of(x = c("satelite_x", "satelite_y")),
+    .key = "lm12_sp",
+  ) |>
+  dplyr::mutate(
+    lm12_sp = purrr::map(
+      .x = lm12_sp,
+      .f = function(lm12_sp, grid_sf) {
+        dplyr::left_join(
+          x = grid_sf,
+          y = lm12_sp,
+          by = "path_row"
+        )
+      },
+      grid_sf = grid_sf
+    )
+  )
+
+rsquared_lm01_tb <-
+  data_tb |>
+  dplyr::select(
+    path_row, satelite_x, satelite_y,
+    lm01 = rsquared_01,
+    lm_01_model_param
+  ) |>
+  # Get the pvalues.
+  dplyr::mutate(
+   pvalue_tb = purrr::map(
+      .x=  lm_01_model_param,
+      .f = get_pvalues_from_lm01_params,
+      prefix = "lm01_"
+    )
+  ) |>
+  dplyr::mutate(
+    lm01 = purrr::map(
+      .x = lm01,
+      .f = tibble::as_tibble
+    )
+  ) |>
+  # Join the data in lm01 and pvalue_tb.
+  dplyr::mutate(
+    lm01 = purrr::map2(
+      .x = lm01,
+      .y = pvalue_tb,
+      .f = function(lm01, pvalue_tb){
+        if (nrow(pvalue_tb) == 0) {
+          return(lm01)
+        }
+        return(dplyr::left_join(
+          x = lm01,
+          y = pvalue_tb,
+          by = dplyr::join_by(month == month)
+        ))
+      }
+    )
+  ) |>
+  dplyr::select(-pvalue_tb) |>
+  tidyr::unnest(lm01, names_sep = "_") |>
+  dplyr::mutate(
+    lm01_month = stringr::str_sub(
+      string = lm01_month,
+      start = 7L,
+      end = -1L
+    )
+  ) |>
+  tidyr::nest(
+    .by = tidyselect::all_of(x = c("satelite_x", "satelite_y")),
+    .key = "lm01_sp",
+  ) |>
+  dplyr::mutate(
+    lm01_sp = purrr::map(
+      .x = lm01_sp,
       .f = sp_join_month,
       grid_sf = grid_sf
     )
-  ) |>
-  dplyr::select(satelite_x, satelite_y, sp_join) |>
-  tidyr::unnest(sp_join) |>
-  # Recode the p-values into classes.
-  dplyr::mutate(
-    plot_data = purrr::map(
-      .x = plot_data,
-      .f = function(plot_data, breaks_tb) {
-        plot_data <-
-          plot_data |>
-          dplyr::mutate(
-            pinterval = purrr::map_chr(
-              .x = rsqr_adj,
-              .f = find_interval_name,
-              breaks = breaks_tb[["pbreaks"]],
-              bnames = breaks_tb[["pnames"]]
-            ),
-            pinterval = factor(
-              x = pinterval,
-              levels = breaks_tb[["pnames"]],
-              ordered = TRUE
-            ),
-            pcolor = breaks_tb[["pcolors"]][pinterval]
-          )
-        return(plot_data)
-      },
-      breaks_tb = pvalue_breaks_tb
-    )
   )
 
-# Get the grid plots.
+rsquared_tb <-
+  dplyr::left_join(
+    x = rsquared_lm01_tb,
+    y = rsquared_lm12_tb,
+    by = dplyr::join_by(satelite_x == satelite_x, satelite_y == satelite_y)
+  )
+
+rm(rsquared_lm01_tb)
+rm(rsquared_lm12_tb)
+
+# Recode the p-values into classes.
+
+brazil_sf <- 
+  geobr::read_state(
+    year = 2025,
+    simplified = TRUE,
+    output = "sf",
+    showProgress = FALSE,
+    cache = TRUE,
+    verbose = FALSE
+  )
+
 rsquared_tb <-
   rsquared_tb |>
-  # Get a basic map of the data on the grid.
+  # Plot rsquared.
   dplyr::mutate(
-    plot_rsqr_adj_grid = purrr::map(
-      .x = plot_data,
-      .f = get_base_map,
-      #var = rsqr_adj,
-      var = pinterval
+    plot_lm12_rsqr = purrr::map(
+      .x = lm12_sp,
+      .f = get_plot_sf,
+      var = lm12_rsqr_adj,
+      polygons_sf = brazil_sf
     )
   ) |>
-  # Create file names for storing grid plots.
   dplyr::mutate(
-    title_plot_grid = sprintf("x: %s, y: %s, %s", satelite_x, satelite_y, month),
-    out_file_grid = file.path(
-      grid_dir,
-      paste0(
-        "plot_grid_x_",
-        satelite_x,
-        "_y_",
-        satelite_y,
-        "_",
-        month,
-        "_rsqr-adj.png"
-      )
+    plot_lm01_rsqr = purrr::map(
+      .x = lm01_sp,
+      .f = get_plot_lm01_rsqr,
+      var = lm01_rsqr_adj,
+      polygons_sf = brazil_sf
     )
   ) |>
-  # Add a title to each grid plot.
+  # Plot pvalues.
   dplyr::mutate(
-      plot_rsqr_adj_grid = purrr::map2(
-        .x = plot_rsqr_adj_grid,
-        .y = title_plot_grid,
-        .f = function(plot_obj, title) {
-          plot_obj +
-            ggplot2::labs(title = title)
-        }
-      )
+    plot_lm12_pvalue_intercept = purrr::map(
+      .x = lm12_sp,
+      .f = get_plot_lm_pvalues,
+      breaks_tb = pvalue_breaks_tb,
+      var_pvalue = lm12_pvalue_intercept,
+      polygons_sf = brazil_sf
+    ),
+    plot_lm12_pvalue_slope = purrr::map(
+      .x = lm12_sp,
+      .f = get_plot_lm_pvalues,
+      breaks_tb = pvalue_breaks_tb,
+      var_pvalue = lm12_pvalue_slope,
+      polygons_sf = brazil_sf
+    ),
   ) |>
-  # Write grid plots to disc.
   dplyr::mutate(
-    plot_rsqr_adj_grid_written_to = purrr::map2_chr(
-      .x = plot_rsqr_adj_grid,
-      .y = out_file_grid,
-      .f = function(plot, file, size) {
-        ggplot2::ggsave(
-          filename = file,
-          plot = plot,
-          width = size[["width"]],
-          height = size[["height"]],
-          units = size[["units"]]
-        )
-        return(file)
-      },
-      size = plot_size_a5_ls
+    plot_lm01_pvalue = purrr::map(
+      .x = lm01_sp,
+      .f = get_plot_lm01_pvalues,
+      breaks_tb = pvalue_breaks_tb,
+      var_pvalue_intercept = lm01_lm01_pvalue_intercept,
+      var_pvalue_slope = lm01_lm01_pvalue_slope,
+      polygons_sf = brazil_sf
+    )    
+  ) |>
+  # Write lm12 rsqr maps to disc!
+  dplyr::mutate(
+    path_plot_lm12_rsqr = purrr::pmap_chr(
+      .l = list(plot_lm12_rsqr, satelite_x, satelite_y),
+      .f = save_plot_lm12_rsqr,
+      plot_size = plot_size_a5_ls,
+      out_dir = out_dir_figures
+    )
+  ) |>
+  # Write lm12 p.value maps to disc!
+  dplyr::mutate(
+    path_plot_lm12_pvalue_intercept = purrr::pmap_chr(
+      .l = list(plot_lm12_pvalue_intercept, satelite_x, satelite_y),
+      .f = save_plot_lm12_pvalue_intercept,
+      plot_size = plot_size_a5_ls,
+      out_dir = out_dir_figures
+    ),
+    path_plot_lm12_pvalue_slope = purrr::pmap_chr(
+      .l = list(plot_lm12_pvalue_slope, satelite_x, satelite_y),
+      .f = save_plot_lm12_pvalue_slope,
+      plot_size = plot_size_a5_ls,
+      out_dir = out_dir_figures
+    )
+  ) |>
+  # Write lm01 rsqr maps to disc!
+  # NOTE: The file paths are inside plot_lm01_rsqr_tb.
+  dplyr::rename(plot_lm01_rsqr_tb = plot_lm01_rsqr) |>
+  dplyr::mutate(
+    plot_lm01_rsqr_tb = purrr::pmap(
+      .l = list(plot_lm01_rsqr_tb, satelite_x, satelite_y),
+      .f = save_plot_lm01_rsqr,
+      plot_size = plot_size_a5_ls,
+      out_dir = out_dir_figures
+    )
+  ) |>
+  # Write lm01 pvalues (intercept and slope) to disc!
+  # NOTE: The file paths are inside plot_lm01_rsqr_tb.
+  dplyr::rename(plot_lm01_pvalue_tb = plot_lm01_pvalue) |>
+  dplyr::mutate(
+    plot_lm01_pvalue_intercept = purrr::pmap(
+      .l = list(plot_lm01_pvalue_tb, satelite_x, satelite_y),
+      .f = save_plot_lm01_pvalue_intercept,
+      plot_size = plot_size_a5_ls,
+      out_dir = out_dir_figures
+    ),
+    plot_lm01_pvalue_slope = purrr::pmap(
+      .l = list(plot_lm01_pvalue_tb, satelite_x, satelite_y),
+      .f = save_plot_lm01_pvalue_slope,
+      plot_size = plot_size_a5_ls,
+      out_dir = out_dir_figures
     )
   )
 
-# Get the frequency plots.
-rsquared_tb <-
+# Get r-squared and p.value tables ready for exporting to CSV.
+
+export_lm12_rsquared_tb <-
   rsquared_tb |>
-  # Add the Adjusted R squared frequency plot.
+  dplyr::select(satelite_x, satelite_y, lm12_sp) |>
   dplyr::mutate(
-    plot_rsqr_adj_hist = purrr::map(
-      .x = plot_data,
-      .f = get_base_hist
+    lm12_tb = purrr::map(
+      .x = lm12_sp,
+      .f = sf::st_drop_geometry
+    ),
+    lm12_tb = purrr::map(
+      .x = lm12_tb,
+      .f = function(lm12_tb) {
+        res <-
+          lm12_tb |>
+          dplyr::select(path_row, lm12_rsqr, lm12_rsqr_adj,
+            lm12_pvalue_intercept, lm12_pvalue_slope)
+        return(res)
+      }
     )
   ) |>
-  # Create file names for storing each frequency plot.
-  dplyr::mutate(
-    title_plot_hist = sprintf("x: %s, y: %s, %s", satelite_x, satelite_y, month),
-    out_file_hist = file.path(
-      grid_dir,
-      paste0(
-        "plot_hist_x_",
-        satelite_x,
-        "_y_",
-        satelite_y,
-        "_",
-        month,
-        "_rsqr-adj.png"
-      )
-    )
-  ) |>
-  # Add a title to each frequency plot.
-  dplyr::mutate(
-      plot_rsqr_adj_hist = purrr::map2(
-        .x = plot_rsqr_adj_hist,
-        .y = title_plot_hist,
-        .f = function(plot_obj, title) {
-          plot_obj +
-            ggplot2::labs(title = title)
-        }
-      )
-  ) |>
-  # Write to frequancy plots to disc.
-  dplyr::mutate(
-    plot_rsqr_adj_hist_written_to = purrr::map2_chr(
-      .x = plot_rsqr_adj_hist,
-      .y = out_file_hist,
-      .f = function(plot, file, size) {
-        ggplot2::ggsave(
-          filename = file,
-          plot = plot,
-          width = size[["width"]],
-          height = size[["height"]],
-          units = size[["units"]]
-        )
-        return(file)
-      },
-      size = plot_size_a5_ls
-    )
+  dplyr::select(-lm12_sp) |>
+  unnest(lm12_tb) |>
+  dplyr::select(satelite_x, satelite_y, path_row, lm12_rsqr, lm12_rsqr_adj,
+      lm12_pvalue_intercept, lm12_pvalue_slope) |>
+  readr::write_csv(
+    file = file.path(out_dir_tables, "lm12_rsquared_tb.csv"),
+    progress = FALSE
   )
 
-lm_param_tb <-
-  data_tb |>
-  dplyr::select(path_row, satelite_x, satelite_y, lm_01_model_param) |>
-  tidyr::unnest(lm_01_model_param) |>
-  dplyr::group_by(satelite_x, satelite_y, term) |>
-  tidyr::nest(.key = "dat") |>
-  # Join data to spatial grid.
+export_lm01_rsquared_tb <-
+  rsquared_tb |>
+  dplyr::select(satelite_x, satelite_y, lm01_sp) |>
   dplyr::mutate(
-    sp_join = purrr::map(
-      .x = dat,
-      .f = sp_join_month,
-      grid_sf = grid_sf
+    lm01_tb = purrr::map(
+      .x = lm01_sp,
+      .f = sf::st_drop_geometry
     )
   ) |>
-  tidyr::unnest(sp_join) |>
-  #NOTE: plot_data contains more variables worth of plotting!
-  dplyr::select(satelite_x, satelite_y, month, term, plot_data) |>
-  dplyr::mutate(
-    term = dplyr::if_else(
-      condition = term %in% c("(Intercept)") ,
-      true = "intercept",
-      false = "slope"
-    )
-  ) |>
-  # Create a basic plot.
-  dplyr::mutate(
-    plot_estimate = purrr::map(
-      .x = plot_data,
-      .f = get_base_map,
-      var = estimate
-    ),
-    plot_pvalue = purrr::map(
-      .x = plot_data,
-      .f = get_base_map,
-      var = p.value
-    )
-  ) |>
-  # Create a title and a filepath for storing the plot.
-  dplyr::mutate(
-    title_estimate = sprintf("x: %s, y: %s, %s, %s", satelite_x, satelite_y,
-                             month, term),
-    title_pvalue = sprintf("x: %s, y: %s, %s, %s (p.value)", satelite_x,
-                           satelite_y, month, term),
-    out_file_estimate = file.path(
-      grid_dir,
-      paste0(
-        "plot_grid_x_",
-        satelite_x,
-        "_y_",
-        satelite_y,
-        "_",
-        month,
-        "_",
-        term,
-        ".png"
-      )
-    ),
-    out_file_pvalue = paste0(tools::file_path_sans_ext(out_file_estimate),
-                             "_pvalue.png")
-  )  |>
-  # Add a title to each plot.
-  dplyr::mutate(
-      plot_estimate = purrr::map2(
-        .x = plot_estimate ,
-        .y = title_estimate,
-        .f = function(plot_obj, title) {
-          plot_obj +
-            ggplot2::labs(title = title)
-        }
-      )  ,
-      plot_pvalue = purrr::map2(
-        .x = plot_pvalue,
-        .y = title_pvalue,
-        .f = function(plot_obj, title) {
-          plot_obj +
-            ggplot2::labs(title = title)
-        }
-      )
-  ) |>
-  # Write to disc.
-  dplyr::mutate(
-    estimate_written_to = purrr::map2_chr(
-      .x = plot_estimate,
-      .y = out_file_estimate,
-      .f = function(plot, file, size) {
-        ggplot2::ggsave(
-          filename = file,
-          plot = plot,
-          width = size[["width"]],
-          height = size[["height"]],
-          units = size[["units"]]
-        )
-        return(file)
-      },
-      size = plot_size_a5_ls
-    ),
-    pvalue_written_to = purrr::map2_chr(
-      .x = plot_pvalue,
-      .y = out_file_pvalue,
-      .f = function(plot, file, size) {
-        ggplot2::ggsave(
-          filename = file,
-          plot = plot,
-          width = size[["width"]],
-          height = size[["height"]],
-          units = size[["units"]]
-        )
-        return(file)
-      },
-      size = plot_size_a5_ls
-    )
+  dplyr::select(-lm01_sp) |>
+  tidyr::unnest(lm01_tb) |>
+  tidyr::unnest(plot_data) |>
+  dplyr::select(satelite_x, satelite_y, path_row, lm01_month, lm01_rsqr,
+      lm01_rsqr_adj,
+      lm01_pvalue_intercept = lm01_lm01_pvalue_intercept,
+      lm01_pvalue_slope = lm01_lm01_pvalue_slope) |>
+  readr::write_csv(
+    file = file.path(out_dir_tables, "lm01_rsquared_tb.csv"),
+    progress = FALSE
   )

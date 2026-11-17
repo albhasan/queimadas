@@ -70,6 +70,6 @@ download_data <- function(out_dir, data_url = get_data_url(), wait_time = 5,
 get_data_url <- function() {
   # NOTE: This directory includes data from all the satellites only for Brazil.
   # NOTE: Data for south America includes only the reference satellite and it
-  # is a couple of leves up from Brazil's data.
+  # is a couple of levels up from Brazil's data.
   return("https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/anual/Brasil_todos_sats")
 }

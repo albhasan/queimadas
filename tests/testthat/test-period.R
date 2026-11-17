@@ -11,12 +11,26 @@ test_that("is_period_valid works", {
   expect_false(is_period_valid(x = character(0)))
 })
 
-test_that("period_to_date and date_to_period works", {
+test_that("period_to_date works", {
   aperiod <- "2007-01"
   adate <- period_to_date(aperiod)
   expect_equal(
     adate,
     as.Date("2007-01-01")
+  )
+  newperiod <- date_to_period(adate)
+  expect_equal(
+    newperiod,
+    aperiod
+  )
+})
+
+test_that("date_to_period works", {
+  aperiod <- "2002-12"
+  adate <- period_to_date(aperiod)
+  expect_equal(
+    adate,
+    as.Date("2002-12-01")
   )
   newperiod <- date_to_period(adate)
   expect_equal(

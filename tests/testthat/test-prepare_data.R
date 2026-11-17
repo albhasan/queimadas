@@ -1,12 +1,15 @@
 test_that("get_brazil works", {
-  # TODO
+  # TODO:
 })
+
 test_that("get_brazil_year_month works", {
-  # TODO
+  # TODO:
 })
+
 test_that("get_brazil_month works", {
-  # TODO
+  # TODO:
 })
+
 test_that("get_sat_pairs works", {
 
   data_tb <-
@@ -47,3 +50,6 @@ test_that("get_sat_pairs works", {
 
 })
 
+test_that("get_brazil_year_month_cell works", {
+  # TODO:
+})

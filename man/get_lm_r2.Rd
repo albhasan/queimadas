@@ -12,7 +12,7 @@ get_lm_r2(lm_obj, adjusted)
 \item{adjusted}{a logical(1). Should we return the adjusted R squared?}
 }
 \value{
-a numeric.
+a numeric or NA.
 }
 \description{
 Get the R squared coefficient from a regression object.

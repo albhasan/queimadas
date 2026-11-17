@@ -2,6 +2,9 @@
 ###############################################################################
 # RUN REGRESSIONS ON THE ACTIVE FIRES IN EACH CELL IN THE GRID
 #------------------------------------------------------------------------------
+# NOTE: The number of points used in each monthly regression is the number of
+#       rows in the data extracted from the model.
+#------------------------------------------------------------------------------
 # ./fire_by_cell.R
 # -f /home/alber/Documents/results/r_packages/queimadas/cell_ts/active-fires_233_067.RDS
 # -o /home/alber/Documents/results/r_packages/queimadas/cell_lm
@@ -16,29 +19,23 @@ require(queimadas)
 
 #---- Take parameters from command line ----
 
-if (interactive()) {
-  rds_file <- "/home/alber/Documents/results/r_packages/queimadas/cell_ts/active-fires_233_067.RDS"
-  out_dir <- "/home/alber/Documents/results/r_packages/queimadas/cell_lm"
-} else {
-  option_list <-
-    list(
-      optparse::make_option(
-        opt_str = c("-f", "--file"),
-        type = "character",
-        help = "A file with active fire data."
-      ),
-      optparse::make_option(
-        opt_str = c("-o", "--out"),
-        type = "character",
-        help = "A directory for storing the results."
-      )
+option_list <-
+  list(
+    optparse::make_option(
+      opt_str = c("-f", "--file"),
+      type = "character",
+      help = "A file with active fire data."
+    ),
+    optparse::make_option(
+      opt_str = c("-o", "--out"),
+      type = "character",
+      help = "A directory for storing the results."
     )
-  opt_parser <- OptionParser(option_list = option_list)
-  opt <- parse_args(opt_parser)
-  out_dir <- opt$out
-  rds_file <- opt$file
-
-}
+  )
+opt_parser <- OptionParser(option_list = option_list)
+opt <- parse_args(opt_parser)
+out_dir <- opt$out
+rds_file <- opt$file
 
 stopifnot("RDS file not found!" = file.exists(rds_file))
 stopifnot("Output directory not found!" = dir.exists(out_dir))
@@ -65,7 +62,7 @@ stopifnot(
     all(sat_char %in% unique(data_tb[["satelite"]]))
 )
 
-plot_size_a5_ls <- get_paper_size(name = "A5", orientation = "ls")
+# plot_size_a5_ls <- get_paper_size(name = "A5", orientation = "ls")
 
 
 
@@ -130,8 +127,7 @@ sat_tb <-
       cname = "period"
     )
   ) |>
-  dplyr::filter(overlap_ts > 0) |>
-  dplyr::select(-overlap_ts)
+  dplyr::filter(overlap_ts > 0)
 
 
 
@@ -139,8 +135,8 @@ sat_tb <-
 
 sat_lm_tb <-
   sat_tb |>
-  #NOTE: 01 month regressions start here.
-  # Fit a linear model using overlapping x & y data.
+  #note: 01 month regressions start here.
+  # fit a linear model using overlapping x & y data.
   dplyr::mutate(
     lm_data_month = purrr::map2(
       .x = x_df,
@@ -151,74 +147,90 @@ sat_lm_tb <-
     )
   ) |>
   dplyr::mutate(
-    # Get the fitted models in their own column.
+    # get the fitted models in their own column.
     lm_01_models = purrr::map(
       .x = lm_data_month,
       .f = function(data_ls) {
         data_tb_ls <- lapply(X = data_ls, FUN = function(a) {
-          return(a[["model"]])
+          if ("model" %in% names(a)) { 
+            return(a[["model"]])
+          }
+          return(NA)
         })
       }
-    ),
-    # Get the fitted model data in a column.
+    )
+  ) |>
+  dplyr::mutate(
+    # get the fitted model data in a column.
     lm_01_data = purrr::map(
       .x = lm_data_month,
-      .f = function(data_ls, data_names) {
-        data_tb_ls <- lapply(X = data_ls, FUN = function(a) {
-          data_tb <- tibble::as_tibble(a[["data"]])
-        })
+      .f = function(data_ls) {
+        data_tb_ls <-
+          lapply(X = data_ls, FUN = function(a) {
+            if(any(is.na(a))) {return(NA)}
+            data_tb <- tibble::as_tibble(a[["data"]])
+          })
+        data_tb_ls <- data_tb_ls[is.na(data_tb_ls) == FALSE]
         return(dplyr::bind_rows(lnames2df(df_ls = data_tb_ls, cname = "month")))
       }
     )
   ) |>
   dplyr::select(-lm_data_month) |>
-  # Compute models statistics r-squred and adjusted r-squared.
+  # compute models statistics r-squred and adjusted r-squared.
   dplyr::mutate(
     rsquared_01 = purrr::map(
       .x = lm_01_models,
       .f = function(lm_models){
-        rsqr_tb <- data.frame(
-          rsqr = vapply(
-            X = lm_models,
-            FUN = get_lm_r2,
-            adjusted = FALSE,
-            numeric(1)
-          ),
-          rsqr_adj = vapply(
-            X = lm_models,
-            FUN = get_lm_r2,
-            adjusted = TRUE,
-            numeric(1)
+        rsqr_tb <-
+          data.frame(
+            rsqr = get_lm_r2(
+              lm_obj = lm_models,
+              adjusted = FALSE
+            ),
+            rsqr_adj = get_lm_r2(
+              lm_obj = lm_models,
+              adjusted = TRUE
+            )
           )
-        )
         rsqr_tb <- tibble::rownames_to_column(rsqr_tb, var = "month")
         return(rsqr_tb)
       }
     )
   ) |>
-  # Get the models parameters as a tibble.
+  # get the models parameters as a tibble.
   dplyr::mutate(
     lm_01_model_param = purrr::map(
       .x = lm_01_models,
       .f = function(models_ls) {
-        purrr::map(
-          .x = models_ls,
-          .f = broom::tidy,
-          # NOTE: broom::tidy extracts data from the model as a tibble. It
-          # doesn't make computations. So the confidence level reported by it
-          # should be the same as computed by other means.
-          conf.int = TRUE,
-          conf.level = confidence_level
-        ) |>
-          purrr::list_rbind(names_to = "month")
+        lm_tb <-
+          purrr::map(
+            .x = models_ls,
+            .f = function(lm_obj) {
+                if (length(lm_obj) == 1 && is.na(lm_obj)) {return(NA)}
+                if (inherits(x = lm_obj, what = "lm")) {
+                  return(broom::tidy(lm_obj))
+                }
+              }
+          )
+        lm_tb <- lm_tb[is.na(lm_tb) == FALSE]
+        return(purrr::list_rbind(lm_tb, names_to = "month"))
       }
     )
   ) |>
-  # Keep satellite combinations that have enough models (12).
+  # count the number of monthly models for each par of satellites.
   dplyr::mutate(
     n_models_01 = purrr::map_int(
       .x = lm_01_models,
-      .f = length
+      .f = function(lm_models) {
+        na_models <- 
+          vapply(
+            X = lm_models,
+            FUN = function(a){return(length(a) == 1 && is.na(a))},
+            FUN.VALUE = logical(1)
+          )
+        valid_models <- sum(na_models == FALSE)
+        return(valid_models)
+      }
     )
   ) |>
   # Predict future and past using the fitted models.
@@ -227,9 +239,8 @@ sat_lm_tb <-
       .x = lm_01_models,
       .y = x_df,
       .f = function(lm_ls, x_df) {
-        if(length(lm_ls) != 12){
-          return(NA)
-        }
+        if(length(lm_ls) != 12){ return(NA) }
+        if(sum(is.na(lm_ls)) != 0){ return(NA) }
         pred_ls <- predict_ci_01(
           lm_ls = lm_ls,
           new_data = x_df,
@@ -287,7 +298,6 @@ sat_lm_tb <-
       }
     )
   ) |>
-  # TODO: Create plots for the model in each row.
   # Keep satellite combinations that have enough models (12).
   dplyr::mutate(
     n_models_12 = purrr::map_int(
@@ -300,7 +310,6 @@ sat_lm_tb <-
       }
     )
   ) |>
-  #dplyr::filter(n_models_12 == 1) |>
   # Predict future and past using the fitted models.
   dplyr::mutate(
     forecast_12_df = purrr::map2(
@@ -319,6 +328,16 @@ sat_lm_tb <-
         predict_df <- as.data.frame(predict_mt)
         return(predict_df)
       }
+    )
+  ) |>
+  # Fill in forescast_df with the predictions in forescast_01_df. If missing,
+  # fill it with the predictions in forescast-12_df.
+  dplyr::mutate(
+    forescast_df = dplyr::if_else(
+      condition = is.na(forecast_01_df),
+      true =  forecast_12_df,
+      false = forecast_01_df,
+      missing = NA
     )
   )
 

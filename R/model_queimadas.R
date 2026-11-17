@@ -108,12 +108,9 @@ fit_lm_12_months <- function(x_df, y_df, formula = "y ~ x", clevel = 0.95) {
 #' @export
 #'
 fit_lm_01_months <- function(x_df, y_df, formula = "y ~ x", clevel = 0.95) {
-  cname <- "period"
-  colnames(x_df)[2] <- "x"
-  colnames(y_df)[2] <- "y"
-  data_df <- get_ts_overlap(x_df = x_df, y_df = y_df, cname = cname)
-  if (nrow(data_df) == 0) {
-    return(list(
+
+  # Prepare the object to be returned.
+  res_ls <- list(
       model_01 = NA,
       model_02 = NA,
       model_03 = NA,
@@ -126,28 +123,63 @@ fit_lm_01_months <- function(x_df, y_df, formula = "y ~ x", clevel = 0.95) {
       model_10 = NA,
       model_11 = NA,
       model_12 = NA
-    ))
+    )
+  # Prepare the data frames for processing.
+  cname <- "period"
+  colnames(x_df)[2] <- "x"
+  colnames(y_df)[2] <- "y"
+  data_df <- get_ts_overlap(x_df = x_df, y_df = y_df, cname = cname)
+  if (nrow(data_df) == 0) {
+    return(res_ls)
   }
   data_df["m"] <- get_month_from_period(x = data_df[[cname]])
   data_df["year"] <- get_year_from_period(x = data_df[[cname]])
   data_df <- data_df[c("year", "m", "x", "y")]
-
+  # Split the data by month.
   data_ls <- split(
     x = data_df,
     f = data_df[["m"]],
     drop = FALSE
   )
-  names(data_ls) <- paste0("month_", names(data_ls))
-
-  return(
+  stopifnot("Invalid number of monthly data sets" =
+            length(res_ls) >= length(data_ls))
+  names(data_ls) <- paste0("model_", names(data_ls))
+  stopifnot("Invalid month names found!" =
+            sum(names(data_ls) %in% names(res_ls)) > 0)
+  # Complete with NAs the data list in case of missing data.
+  missing_months <- names(res_ls)[!(names(res_ls) %in% names(data_ls))]
+  missing_ls <- rep(NA, times = length(missing_months) )
+  names(missing_ls) <- missing_months
+  data_ls <- append(data_ls, missing_ls)
+  data_ls <- data_ls[order(names(data_ls))]
+  # Try the regression.
+  reg_ls <-
     lapply(
       X = data_ls,
-      FUN = fit_lm,
+      FUN = function(data_df, formula, clevel) {
+        # Do not process NA.
+        if (length(data_df) == 1 && is.na(data_df)) {
+          return(NA)
+        }
+        # Avoid warnings when there aren't enough data for regression.
+        if (nrow(data_df) <= 2) {
+          return(NA)
+        }
+        return(
+          fit_lm(
+            data_df = data_df,
+            formula = formula,
+            clevel = clevel
+          )
+        )
+      },
       formula = formula,
       clevel = clevel
     )
-  )
+
+  return( reg_ls)
 }
+
 
 #' fit a linear model
 #'
