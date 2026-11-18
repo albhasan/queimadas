@@ -4,7 +4,7 @@
 \alias{get_plot_lm01_rsqr}
 \title{Get a plot of the rsquare}
 \usage{
-get_plot_lm01_rsqr(lm01_sp, var, polygons_sf)
+get_plot_lm01_rsqr(lm01_sp, var, polygons_sf, leg)
 }
 \arguments{
 \item{lm01_sp}{a tibble with 2 columns: the on with the month and the
@@ -13,6 +13,8 @@ list-column with the plot data (\code{sf} objects).}
 \item{var}{a variable in the column \code{plot_data} of \code{lm01_sp}.}
 
 \item{polygons_sf}{an \verb{sf`` object which outline will be plot on top of }data_sf`.}
+
+\item{leg}{a logical(1). Should the legend be included in the plot?}
 }
 \description{
 Util function. Get the monthly r-squared plots of the montly linear models.

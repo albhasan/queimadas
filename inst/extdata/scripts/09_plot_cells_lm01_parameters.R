@@ -24,12 +24,6 @@ stopifnot("Grid geopackages file not found!" = file.exists(grid_gpkg))
 out_dir <- "/home/alber/Documents/github/slides/queimadas/slides"
 stopifnot("Output directory not found!" = dir.exists(out_dir))
 
-# grid_dir <- file.path(out_dir, "grid")
-# stopifnot(
-#   "Output directory for grid figures not found!" =
-#   dir.exists(grid_dir)
-# )
-
 plot_size_a5_ls <- get_paper_size(name = "A5", orientation = "ls")
 
 # Breaks used for ploting data.
@@ -64,8 +58,6 @@ if (dir.exists(out_dir_tables) == FALSE){
   dir.create(out_dir_tables)
 }
 
-
-
 # Read the spatial grid.
 grid_sf <-
   grid_gpkg |>
@@ -76,7 +68,7 @@ grid_sf <-
 biomes_sf <- geobr::read_biomes(year = 2025, simplified = TRUE)
 biomes_sf <- sf::st_transform(biomes_sf, crs = sf::st_crs(grid_sf))
 
-# Get the path & rows covering Brazil.
+# Get the grid's path & rows covering Brazil.
 path_row_br <-
   grid_sf |>
   sf::st_intersection(y = biomes_sf) |>
@@ -84,13 +76,13 @@ path_row_br <-
   dplyr::pull(path_row) |>
   unique() |>
   sort()
-
 # Filter the grid.
 grid_sf <-
   grid_sf |>
   dplyr::filter(path_row %in% path_row_br)
+rm(path_row_br)
 
-# Read the data.
+# Read the aggredated data of each cell in the grid.
 data_tb <-
   rds_dir |>
   list.files(
@@ -107,8 +99,7 @@ data_tb <-
   ) |>
   tidyr::unnest(data_tb)
 
-# Get the R squared data ready for plotting.
-
+# Process the lm12 r-squared data.
 rsquared_lm12_tb <-
   data_tb |>
   dplyr::select(
@@ -143,6 +134,7 @@ rsquared_lm12_tb <-
     )
   )
 
+# Process the lm01 r-squared data.
 rsquared_lm01_tb <-
   data_tb |>
   dplyr::select(
@@ -202,37 +194,30 @@ rsquared_lm01_tb <-
     )
   )
 
+# Merge lm12 & lm01 tibbles.
 rsquared_tb <-
   dplyr::left_join(
     x = rsquared_lm01_tb,
     y = rsquared_lm12_tb,
     by = dplyr::join_by(satelite_x == satelite_x, satelite_y == satelite_y)
   )
-
 rm(rsquared_lm01_tb)
 rm(rsquared_lm12_tb)
 
 # Recode the p-values into classes.
 
-brazil_sf <- 
-  geobr::read_state(
-    year = 2025,
-    simplified = TRUE,
-    output = "sf",
-    showProgress = FALSE,
-    cache = TRUE,
-    verbose = FALSE
-  )
+brstate_sf <- queimadas::brstate_sf
 
 rsquared_tb <-
   rsquared_tb |>
-  # Plot rsquared.
+  # Plot rsquared grid.
   dplyr::mutate(
     plot_lm12_rsqr = purrr::map(
       .x = lm12_sp,
       .f = get_plot_sf,
       var = lm12_rsqr_adj,
-      polygons_sf = brazil_sf
+      polygons_sf = brstate_sf,
+      leg = TRUE
     )
   ) |>
   dplyr::mutate(
@@ -240,34 +225,57 @@ rsquared_tb <-
       .x = lm01_sp,
       .f = get_plot_lm01_rsqr,
       var = lm01_rsqr_adj,
-      polygons_sf = brazil_sf
+      polygons_sf = brstate_sf,
+      leg = TRUE
     )
   ) |>
   # Plot pvalues.
   dplyr::mutate(
-    plot_lm12_pvalue_intercept = purrr::map(
+    plot_lm12_pvalue_intercept_grid = purrr::map(
       .x = lm12_sp,
-      .f = get_plot_lm_pvalues,
+      .f = get_plot_lm_pvalues_grid,
       breaks_tb = pvalue_breaks_tb,
       var_pvalue = lm12_pvalue_intercept,
-      polygons_sf = brazil_sf
+      polygons_sf = brstate_sf,
+      leg = FALSE
     ),
-    plot_lm12_pvalue_slope = purrr::map(
+    plot_lm12_pvalue_slope_grid = purrr::map(
       .x = lm12_sp,
-      .f = get_plot_lm_pvalues,
+      .f = get_plot_lm_pvalues_grid,
       breaks_tb = pvalue_breaks_tb,
       var_pvalue = lm12_pvalue_slope,
-      polygons_sf = brazil_sf
+      polygons_sf = brstate_sf,
+      leg = FALSE
     ),
+    plot_lm12_pvalue_intercept_hist = purrr::map(
+      .x = lm12_sp,
+      .f = get_plot_lm_pvalues_hist,
+      breaks_tb = pvalue_breaks_tb,
+      var_pvalue = lm12_pvalue_intercept
+    ),
+    plot_lm12_pvalue_slope_hist = purrr::map(
+      .x = lm12_sp,
+      .f = get_plot_lm_pvalues_hist,
+      breaks_tb = pvalue_breaks_tb,
+      var_pvalue = lm12_pvalue_slope
+    )
   ) |>
   dplyr::mutate(
-    plot_lm01_pvalue = purrr::map(
+    plot_lm01_pvalue_grid = purrr::map(
       .x = lm01_sp,
-      .f = get_plot_lm01_pvalues,
+      .f = get_plot_lm01_pvalues_grid,
       breaks_tb = pvalue_breaks_tb,
       var_pvalue_intercept = lm01_lm01_pvalue_intercept,
       var_pvalue_slope = lm01_lm01_pvalue_slope,
-      polygons_sf = brazil_sf
+      polygons_sf = brstate_sf,
+      leg = FALSE
+    ),
+    plot_lm01_pvalue_hist = purrr::map(
+      .x = lm01_sp,
+      .f = get_plot_lm01_pvalues_hist,
+      breaks_tb = pvalue_breaks_tb,
+      var_pvalue_intercept = lm01_lm01_pvalue_intercept,
+      var_pvalue_slope = lm01_lm01_pvalue_slope
     )    
   ) |>
   # Write lm12 rsqr maps to disc!
@@ -281,20 +289,32 @@ rsquared_tb <-
   ) |>
   # Write lm12 p.value maps to disc!
   dplyr::mutate(
-    path_plot_lm12_pvalue_intercept = purrr::pmap_chr(
-      .l = list(plot_lm12_pvalue_intercept, satelite_x, satelite_y),
-      .f = save_plot_lm12_pvalue_intercept,
+    path_plot_lm12_pvalue_intercept_grid = purrr::pmap_chr(
+      .l = list(plot_lm12_pvalue_intercept_grid, satelite_x, satelite_y),
+      .f = save_plot_lm12_pvalue_intercept_grid,
       plot_size = plot_size_a5_ls,
       out_dir = out_dir_figures
     ),
-    path_plot_lm12_pvalue_slope = purrr::pmap_chr(
-      .l = list(plot_lm12_pvalue_slope, satelite_x, satelite_y),
-      .f = save_plot_lm12_pvalue_slope,
+    path_plot_lm12_pvalue_slope_grid = purrr::pmap_chr(
+      .l = list(plot_lm12_pvalue_slope_grid, satelite_x, satelite_y),
+      .f = save_plot_lm12_pvalue_slope_grid,
+      plot_size = plot_size_a5_ls,
+      out_dir = out_dir_figures
+    ),
+    path_plot_lm12_pvalue_intercept_hist = purrr::pmap_chr(
+      .l = list(plot_lm12_pvalue_intercept_hist, satelite_x, satelite_y),
+      .f = save_plot_lm12_pvalue_intercept_grid,
+      plot_size = plot_size_a5_ls,
+      out_dir = out_dir_figures
+    ),
+    path_plot_lm12_pvalue_slope_hist= purrr::pmap_chr(
+      .l = list(plot_lm12_pvalue_slope_hist, satelite_x, satelite_y),
+      .f = save_plot_lm12_pvalue_slope_hist,
       plot_size = plot_size_a5_ls,
       out_dir = out_dir_figures
     )
   ) |>
-  # Write lm01 rsqr maps to disc!
+  # Write lm01 rsqr grids to disc!
   # NOTE: The file paths are inside plot_lm01_rsqr_tb.
   dplyr::rename(plot_lm01_rsqr_tb = plot_lm01_rsqr) |>
   dplyr::mutate(
@@ -305,19 +325,19 @@ rsquared_tb <-
       out_dir = out_dir_figures
     )
   ) |>
-  # Write lm01 pvalues (intercept and slope) to disc!
+  # Write lm01 pvalue (intercept and slope) to disc!
   # NOTE: The file paths are inside plot_lm01_rsqr_tb.
-  dplyr::rename(plot_lm01_pvalue_tb = plot_lm01_pvalue) |>
+  dplyr::rename(plot_lm01_pvalue_grid_tb = plot_lm01_pvalue_grid) |>
   dplyr::mutate(
-    plot_lm01_pvalue_intercept = purrr::pmap(
-      .l = list(plot_lm01_pvalue_tb, satelite_x, satelite_y),
-      .f = save_plot_lm01_pvalue_intercept,
+    plot_lm01_pvalue_intercept_grid = purrr::pmap(
+      .l = list(plot_lm01_pvalue_grid_tb, satelite_x, satelite_y),
+      .f = save_plot_lm01_pvalue_intercept_grid,
       plot_size = plot_size_a5_ls,
       out_dir = out_dir_figures
     ),
     plot_lm01_pvalue_slope = purrr::pmap(
-      .l = list(plot_lm01_pvalue_tb, satelite_x, satelite_y),
-      .f = save_plot_lm01_pvalue_slope,
+      .l = list(plot_lm01_pvalue_grid_tb, satelite_x, satelite_y),
+      .f = save_plot_lm01_pvalue_slope_grid,
       plot_size = plot_size_a5_ls,
       out_dir = out_dir_figures
     )

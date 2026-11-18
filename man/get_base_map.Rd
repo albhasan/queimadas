@@ -4,12 +4,14 @@
 \alias{get_base_map}
 \title{Helper function for getting a base map}
 \usage{
-get_base_map(plot_data, var)
+get_base_map(plot_data, var, leg)
 }
 \arguments{
 \item{plot_data}{an sf object.}
 
 \item{var}{name of a variable in plot_data.}
+
+\item{leg}{a logical(1). Should the legend be included in the plot?}
 }
 \value{
 a ggplot2 object.

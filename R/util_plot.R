@@ -127,13 +127,13 @@ save_plot_lm12_rsqr <- function(plot_lm12_rsqr, satelite_x, satelite_y,
 
 
 
-#' Save plot to file
+#' Save grid plot to file
 #'
 #' @description
 #' Utilitary function. Write the given plot to disc.
 #'
-#' @param plot_lm12_pvalue_intercept a plot of the r-squared value of the linear model 
-#' adjustd using 12-month samples, independent of the year.
+#' @param plot_lm12_pvalue_intercept_grid a plot of the r-squared value of the
+#' linear model adjustd using 12-month samples, independent of the year.
 #' @param satelite_x,satelite_y a character(1). Names of the observation
 #' satelites used for the regression `y ~ x`.
 #' @param plot_size a list made of the width, height, and units (e.g. cms) of
@@ -144,20 +144,59 @@ save_plot_lm12_rsqr <- function(plot_lm12_rsqr, satelite_x, satelite_y,
 #'
 #' @export
 #'
-save_plot_lm12_pvalue_intercept <- function(plot_lm12_pvalue_intercept,
-                                            satelite_x, satelite_y,
-                                            plot_size, out_dir) {
+save_plot_lm12_pvalue_intercept_grid <- function(
+  plot_lm12_pvalue_intercept_grid, satelite_x, satelite_y, plot_size, out_dir
+) {
   out_file <-
     get_plot_fname(
       out_dir = out_dir,
       sat_x = satelite_x,
       sat_sep <- "xy",
       sat_y = satelite_y,
-      suffix = "plot_lm12_pvalue_intercept.png"
+      suffix = "plot_lm12_pvalue_intercept_grid.png"
     )
   new_file <-
     write_plot(
-    aplot = plot_lm12_pvalue_intercept,
+    aplot = plot_lm12_pvalue_intercept_grid,
+    out_file = out_file,
+    plot_size = plot_size
+  )
+  return(new_file)
+}
+
+
+
+#' Save histogram to file
+#'
+#' @description
+#' Utilitary function. Write the given plot to disc.
+#'
+#' @param plot_lm12_pvalue_intercept_hist a plot of the r-squared value of the
+#' linear model adjustd using 12-month samples, independent of the year.
+#' @param satelite_x,satelite_y a character(1). Names of the observation
+#' satelites used for the regression `y ~ x`.
+#' @param plot_size a list made of the width, height, and units (e.g. cms) of
+#' the desired plot. 
+#' @param out_dir a character(1). Path to a directory.
+#'
+#' @return a character(1). A path to a PNG file.
+#'
+#' @export
+#'
+save_plot_lm12_pvalue_intercept_hist <- function(
+  plot_lm12_pvalue_intercept_hist, satelite_x, satelite_y, plot_size, out_dir
+) {
+  out_file <-
+    get_plot_fname(
+      out_dir = out_dir,
+      sat_x = satelite_x,
+      sat_sep <- "xy",
+      sat_y = satelite_y,
+      suffix = "plot_lm12_pvalue_intercept_hist.png"
+    )
+  new_file <-
+    write_plot(
+    aplot = plot_lm12_pvalue_intercept_hist,
     out_file = out_file,
     plot_size = plot_size
   )
@@ -168,13 +207,14 @@ save_plot_lm12_pvalue_intercept <- function(plot_lm12_pvalue_intercept,
 
 
 
-#' Save plot to file
+
+#' Save grid plot to file
 #'
 #' @description
 #' Utilitary function. Write the given plot to disc.
 #'
-#' @param plot_lm12_pvalue_slope a plot of the r-squared value of the linear model 
-#' adjustd using 12-month samples, independent of the year.
+#' @param plot_lm12_pvalue_slope_grid a plot of the r-squared value of the
+#' linear model adjustd using 12-month samples, independent of the year.
 #' @param satelite_x,satelite_y a character(1). Names of the observation
 #' satelites used for the regression `y ~ x`.
 #' @param plot_size a list made of the width, height, and units (e.g. cms) of
@@ -185,20 +225,59 @@ save_plot_lm12_pvalue_intercept <- function(plot_lm12_pvalue_intercept,
 #'
 #' @export
 #'
-save_plot_lm12_pvalue_slope <- function(plot_lm12_pvalue_slope,
-                                        satelite_x, satelite_y,
-                                        plot_size, out_dir) {
+save_plot_lm12_pvalue_slope_grid <- function(plot_lm12_pvalue_slope_grid,
+                                             satelite_x, satelite_y,
+                                             plot_size, out_dir) {
   out_file <-
     get_plot_fname(
       out_dir = out_dir,
       sat_x = satelite_x,
       sat_sep <- "xy",
       sat_y = satelite_y,
-      suffix = "plot_lm12_pvalue_slope.png"
+      suffix = "plot_lm12_pvalue_slope_grid.png"
     )
   new_file <-
     write_plot(
-    aplot = plot_lm12_pvalue_slope,
+    aplot = plot_lm12_pvalue_slope_grid,
+    out_file = out_file,
+    plot_size = plot_size
+  )
+  return(new_file)
+}
+
+
+
+#' Save histogram to file
+#'
+#' @description
+#' Utilitary function. Write the given histogram to disc.
+#'
+#' @param plot_lm12_pvalue_slope_hist a plot of the r-squared value of the
+#' linear model adjustd using 12-month samples, independent of the year.
+#' @param satelite_x,satelite_y a character(1). Names of the observation
+#' satelites used for the regression `y ~ x`.
+#' @param plot_size a list made of the width, height, and units (e.g. cms) of
+#' the desired plot. 
+#' @param out_dir a character(1). Path to a directory.
+#'
+#' @return a character(1). A path to a PNG file.
+#'
+#' @export
+#'
+save_plot_lm12_pvalue_slope_hist <- function(plot_lm12_pvalue_slope_hist,
+                                             satelite_x, satelite_y,
+                                             plot_size, out_dir) {
+  out_file <-
+    get_plot_fname(
+      out_dir = out_dir,
+      sat_x = satelite_x,
+      sat_sep <- "xy",
+      sat_y = satelite_y,
+      suffix = "plot_lm12_pvalue_slope_hist.png"
+    )
+  new_file <-
+    write_plot(
+    aplot = plot_lm12_pvalue_slope_hist,
     out_file = out_file,
     plot_size = plot_size
   )
@@ -286,12 +365,12 @@ save_plot_lm01_rsqr_util <- function(plot_lm01_rsqr, lm01_month,
 
 
 
-#' Save plot to file
+#' Save grid plot to file
 #'
 #' @description
 #' Utilitary function. Write the given plot to disc.
 #'
-#' @param plot_lm01_pvalue_tb a tibble with the plots of the p.values
+#' @param plot_lm01_pvalue_grid_tb a tibble with the plots of the p.values
 #' (intercept and slope) for each month.
 #' @param satelite_x,satelite_y a character(1). Names of the observation
 #' satelites used for the regression `y ~ x`.
@@ -303,16 +382,19 @@ save_plot_lm01_rsqr_util <- function(plot_lm01_rsqr, lm01_month,
 #'
 #' @export
 #'
-save_plot_lm01_pvalue_intercept <- function(plot_lm01_pvalue_tb,
-                                            satelite_x, satelite_y,
-                                            plot_size, out_dir) {
+save_plot_lm01_pvalue_intercept_grid <- function(plot_lm01_pvalue_grid_tb,
+                                                 satelite_x, satelite_y,
+                                                 plot_size, out_dir) {
   lm01_month <- plot_lm01_pvalue_intercept <- NULL
+  plot_lm01_pvalue_intercept_grid <- NULL
   res <-
-    plot_lm01_pvalue_tb |>
+    plot_lm01_pvalue_grid_tb |>
     dplyr::mutate(
-      path_plot_lm01_pvalue_intercept= purrr::pmap_chr(
+      path_plot_lm01_pvalue_intercept_grid = purrr::pmap_chr(
+        #TODO: Update this column name to indicate it is a grid plot.
+        #.l = list(plot_lm01_pvalue_intercept_grid, lm01_month),
         .l = list(plot_lm01_pvalue_intercept, lm01_month),
-        .f = save_plot_lm01_pvalue_intercept_util,
+        .f = save_plot_lm01_pvalue_intercept_grid_util,
         satelite_x = satelite_x,
         satelite_y = satelite_y,
         plot_size = plot_size,
@@ -324,12 +406,12 @@ save_plot_lm01_pvalue_intercept <- function(plot_lm01_pvalue_tb,
 
 
 
-#' Save plot to file
+#' Save grid plot to file
 #'
 #' @description
 #' Utilitary function. Write the given plot to disc.
 #'
-#' @param plot_lm01_pvalue_intercept A plot of the pvalue value of the
+#' @param plot_lm01_pvalue_intercept_grid A plot of the pvalue value of the
 #' intercept  of the 12-month adjusted linear model.
 #' @param lm01_month a character(1). Month of the linear model in the plot.
 #' @param satelite_x,satelite_y a character(1). Names of the observation
@@ -340,22 +422,22 @@ save_plot_lm01_pvalue_intercept <- function(plot_lm01_pvalue_tb,
 #'
 #' @return a character(1). A path to a PNG file.
 #'
-save_plot_lm01_pvalue_intercept_util <- function(plot_lm01_pvalue_intercept,
-                                                 lm01_month,
-                                                 satelite_x, satelite_y,
-                                                 plot_size, out_dir) {
+save_plot_lm01_pvalue_intercept_grid_util <- function(
+  plot_lm01_pvalue_intercept_grid, lm01_month, satelite_x, satelite_y,
+  plot_size, out_dir
+) {
   out_file <-
     get_plot_fname(
       out_dir = out_dir,
       sat_x = satelite_x,
       sat_sep <- "xy",
       sat_y = satelite_y,
-      suffix = paste("plot_lm01", lm01_month, "pvalue_intercept.png",
+      suffix = paste("plot_lm01", lm01_month, "pvalue_intercept_grid.png",
         sep = "_")
     )
   new_file <-
     write_plot(
-    aplot = plot_lm01_pvalue_intercept,
+    aplot = plot_lm01_pvalue_intercept_grid,
     out_file = out_file,
     plot_size = plot_size
   )
@@ -369,7 +451,7 @@ save_plot_lm01_pvalue_intercept_util <- function(plot_lm01_pvalue_intercept,
 #' @description
 #' Utilitary function. Write the given plot to disc.
 #'
-#' @param plot_lm01_pvalue_tb a tibble with the plots of the p.values
+#' @param plot_lm01_pvalue_grid_tb a tibble with the plots of the p.values
 #' (intercept and slope) for each month.
 #' @param satelite_x,satelite_y a character(1). Names of the observation
 #' satelites used for the regression `y ~ x`.
@@ -381,16 +463,20 @@ save_plot_lm01_pvalue_intercept_util <- function(plot_lm01_pvalue_intercept,
 #'
 #' @export
 #'
-save_plot_lm01_pvalue_slope <- function(plot_lm01_pvalue_tb,
-                                        satelite_x, satelite_y,
-                                        plot_size, out_dir) {
-  lm01_month <- plot_lm01_pvalue_slope <- NULL
+save_plot_lm01_pvalue_slope_grid <- function(plot_lm01_pvalue_grid_tb,
+                                             satelite_x, satelite_y,
+                                             plot_size, out_dir) {
+  lm01_month <- NULL
+  plot_lm01_pvalue_slope <- NULL
+  #plot_lm01_pvalue_slope_grid <- NULL
   res <-
-    plot_lm01_pvalue_tb |>
+    plot_lm01_pvalue_grid_tb |>
     dplyr::mutate(
       path_plot_lm01_pvalue_slope = purrr::pmap_chr(
+        #TODO: Update this column name to indicate it is a grid plot.
+        #.l = list(plot_lm01_pvalue_slope_grid, lm01_month),
         .l = list(plot_lm01_pvalue_slope, lm01_month),
-        .f = save_plot_lm01_pvalue_slope_util,
+        .f = save_plot_lm01_pvalue_slope_grid_util,
         satelite_x = satelite_x,
         satelite_y = satelite_y,
         plot_size = plot_size,
@@ -418,10 +504,10 @@ save_plot_lm01_pvalue_slope <- function(plot_lm01_pvalue_tb,
 #'
 #' @return a character(1). A path to a PNG file.
 #'
-save_plot_lm01_pvalue_slope_util <- function(plot_lm01_pvalue_slope,
-                                                 lm01_month,
-                                                 satelite_x, satelite_y,
-                                                 plot_size, out_dir) {
+save_plot_lm01_pvalue_slope_grid_util <- function(plot_lm01_pvalue_slope,
+                                                  lm01_month,
+                                                  satelite_x, satelite_y,
+                                                  plot_size, out_dir) {
   out_file <-
     get_plot_fname(
       out_dir = out_dir,

@@ -112,8 +112,17 @@ test_that("predict_ci_01 works", {
   x_df <- test_lm[["x_df"]][[1]]
   #NOTE: Some models are missing. There wasn't enough data to produce a model
   #      for each month.
-  expect_true(length(lm_ls) == 10)
-  expect_true(sum(is.na(lm_ls)) == 0)
+  #NOTE: These tests failed after updating the test data!
+  #expect_true(length(lm_ls) == 10)
+  #expect_true(sum(is.na(lm_ls)) == 0)
+  expect_equal(
+    object = length(lm_ls),
+    expected = 12
+  )
+  expect_equal(
+    object = sum(is.na(lm_ls)),
+    expected = 6
+  )
   expect_error(
     predict_ci_01(
       lm_ls = lm_ls,

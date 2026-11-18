@@ -2,9 +2,15 @@ library(dplyr)
 library(geobr)
 library(sf)
 
-brstate_tb <-
-  geobr::read_state(year = 2025) |>
-  sf::st_drop_geometry() |>
+brstate_sf <-
+  geobr::read_state(
+    year = 2025,
+    simplified = TRUE,
+    output = "sf",
+    showProgress = FALSE,
+    cache = TRUE,
+    verbose = FALSE
+  ) |>
   dplyr::select(
     code_state,
     abbrev_state,
@@ -12,6 +18,10 @@ brstate_tb <-
     code_region,
     name_region
   )
+
+brstate_tb <-
+  brstate_sf |>
+  sf::st_drop_geometry()
 
 grid_gpk <- path.expand(
   "~/Documents/data/r_packages/queimadas/grade_tm_util.gpkg"
@@ -22,7 +32,7 @@ grid_sf <-
   grid_gpk |>
   sf::read_sf()
 
-usethis::use_data(brstate_tb, grid_sf, overwrite = TRUE)
+usethis::use_data(brstate_sf, brstate_tb, grid_sf, overwrite = TRUE)
 
 
 

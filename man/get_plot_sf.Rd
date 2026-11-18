@@ -4,7 +4,7 @@
 \alias{get_plot_sf}
 \title{Get a plot of the given variable}
 \usage{
-get_plot_sf(data_sf, var, polygons_sf)
+get_plot_sf(data_sf, var, polygons_sf, leg)
 }
 \arguments{
 \item{data_sf}{an `sf`` object.}
@@ -12,6 +12,8 @@ get_plot_sf(data_sf, var, polygons_sf)
 \item{var}{a variable in \code{data_sf}.}
 
 \item{polygons_sf}{an \verb{sf`` object which outline will be plot on top of }data_sf`.}
+
+\item{leg}{a logical(1). Should the legend be included in the plot?}
 }
 \value{
 a \code{ggplot2} object.

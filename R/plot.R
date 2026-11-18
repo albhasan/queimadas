@@ -677,18 +677,19 @@ get_plot_ts_with_bfast_break <- function(bfast_ts_tb, bfast_top_tb, break_lines)
 #'
 #' @param plot_data an sf object.
 #' @param var name of a variable in plot_data.
+#' @param leg a logical(1). Should the legend be included in the plot?
 #'
 #' @return a ggplot2 object.
 #'
 #' @export
 #'
-get_base_map <- function(plot_data, var) {
+get_base_map <- function(plot_data, var, leg) {
   p <-
     ggplot2::ggplot() +
     ggplot2::geom_sf(
       data = tidyr::drop_na(plot_data),
       mapping = ggplot2::aes(fill = {{ var }}),
-      show.legend = TRUE
+      show.legend = leg
     )
   return(p)
 }
@@ -740,16 +741,18 @@ get_base_hist <- function(plot_data) {
 #' @param var a variable in `data_sf`.
 #' @param polygons_sf an `sf`` object which outline will be plot on top of
 #' `data_sf`.
+#' @param leg a logical(1). Should the legend be included in the plot?
 #'
 #' @return a `ggplot2` object.
 #'
 #' @export
 #'
 #'
-get_plot_sf <- function(data_sf, var, polygons_sf) {
+get_plot_sf <- function(data_sf, var, polygons_sf, leg) {
   get_base_map(
     plot_data = data_sf,
-    var = {{var}}
+    var = {{var}},
+    leg = leg
   ) +
   ggplot2::geom_sf(
     data = polygons_sf,
@@ -771,10 +774,11 @@ get_plot_sf <- function(data_sf, var, polygons_sf) {
 #' @param var a variable in the column `plot_data` of `lm01_sp`.
 #' @param polygons_sf an `sf`` object which outline will be plot on top of
 #' `data_sf`.
+#' @param leg a logical(1). Should the legend be included in the plot?
 #'
 #' @export
 #'
-get_plot_lm01_rsqr <- function(lm01_sp, var, polygons_sf) {
+get_plot_lm01_rsqr <- function(lm01_sp, var, polygons_sf, leg) {
   plot_data <- NULL
   res <-
     lm01_sp |>
@@ -784,14 +788,15 @@ get_plot_lm01_rsqr <- function(lm01_sp, var, polygons_sf) {
         .f = get_plot_sf,
         # var = lm01_rsqr_adj,
         var = {{var}},
-        polygons_sf = polygons_sf
+        polygons_sf = polygons_sf,
+        leg = leg
       )
     )
   return(res)
 }
 
 
-#' Get a plot of p.values
+#' Get a plot of p.values in a grid
 #'
 #' @description
 #' Util function. Get a `ggplot2` object made of the spatial data in `dat_sf`
@@ -803,12 +808,15 @@ get_plot_lm01_rsqr <- function(lm01_sp, var, polygons_sf) {
 #' @param var_pvalue a columnm in `data_sf` with the p.values.
 #' @param polygons_sf an `sf`` object which outline will be plot on top of
 #' `data_sf`.
+#' @param leg a logical(1). Should the legend be included in the plot?
 #'
 #' @return a `ggplot2` object.
 #'
 #' @export
 #'
-get_plot_lm_pvalues <- function(data_sf, breaks_tb, var_pvalue, polygons_sf) {
+get_plot_lm_pvalues_grid <- function(data_sf, breaks_tb, var_pvalue,
+                                     polygons_sf, leg) {
+  pcolor <- NULL
   path_row <- pinterval <- NULL
   p <-
     data_sf |>
@@ -816,14 +824,60 @@ get_plot_lm_pvalues <- function(data_sf, breaks_tb, var_pvalue, polygons_sf) {
       breaks_tb = breaks_tb,
       pvalue_col = {{var_pvalue}}
     ) |>
-    dplyr::select(path_row, pinterval) |>
+    dplyr::select(path_row, pinterval, pcolor) |>
     get_plot_sf(
-      var = pinterval,
-      polygons_sf = polygons_sf
+      #NOTE: Use pcolor and don't show the legend. This figure is meant to be
+        #accompanied by the histogram. The colors here would match those of the
+        #histograms and the readers would understant the color meanings in the
+        #map from the histogram.
+      var = pcolor,
+      polygons_sf = polygons_sf,
+      leg = leg
     )
   return(p)
 }
 
+
+
+#' Get a histogram of p.values
+#'
+#' @description
+#' Util function. Get a `ggplot2` object using the column `var_pvalue` after
+#' being categorized usign the data in `breaks_tb`.
+#'
+#' @param data_sf an `sf` object.
+#' @param breaks_tb a tibble with the categories for the p.values.
+#' @param var_pvalue a columnm in `data_sf` with the p.values.
+#'get_plot_lm01_pvalues_hist
+#' @return a `ggplot2` object.
+#'
+#' @export
+#'
+get_plot_lm_pvalues_hist <- function(data_sf, breaks_tb, var_pvalue) {
+  pcolor <- pinterval <- NULL
+  p <-
+    data_sf |>
+    sf::st_drop_geometry() |>
+    classify_pvalues(
+      breaks_tb = breaks_tb,
+      pvalue_col = {{var_pvalue}}
+    ) |>
+    dplyr::select(pinterval, pcolor) |>
+    ggplot2::ggplot() +
+    ggplot2::geom_bar(
+      mapping = ggplot2::aes(
+        y = pinterval,
+        group = pinterval,
+        fill = pcolor
+      ),
+      show.legend = FALSE
+    ) +
+    ggplot2::labs(
+      x = "Number of cells",
+      y = "p-value"
+    )
+  return(p)
+}
 
 
 #' Get a plot of p.values for the montly models' parameters
@@ -836,32 +890,76 @@ get_plot_lm_pvalues <- function(data_sf, breaks_tb, var_pvalue, polygons_sf) {
 #' @param var_pvalue_intercept,var_pvalue_slope a columnm in `data_sf` with
 #' the p.values for the intercept and the slope.
 #' @param polygons_sf an `sf`` object which outline will be plot on top of
+#' @param leg a logical(1). Should the legend be included in the plot?
 #'
 #' @return a tibble (`lm_tb`) with additional columns.
 #'
 #' @export
 #'
-get_plot_lm01_pvalues <- function(lm_tb, breaks_tb, var_pvalue_intercept,
-                                  var_pvalue_slope, polygons_sf){
+get_plot_lm01_pvalues_grid <- function(lm_tb, breaks_tb, var_pvalue_intercept,
+                                       var_pvalue_slope, polygons_sf, leg){
   plot_data <- NULL
   p <-
     lm_tb |>
     dplyr::mutate(
       plot_lm01_pvalue_intercept = purrr::map(
         .x = plot_data,
-        .f = get_plot_lm_pvalues,
+        .f = get_plot_lm_pvalues_grid,
         breaks_tb = breaks_tb,
         #var_pvalue = lm01_lm01_pvalue_intercept,
         var_pvalue = {{var_pvalue_intercept}},
-        polygons_sf = polygons_sf
+        polygons_sf = polygons_sf,
+        leg = leg
       ),
       plot_lm01_pvalue_slope = purrr::map(
         .x = plot_data,
-        .f = get_plot_lm_pvalues,
+        .f = get_plot_lm_pvalues_grid,
         breaks_tb = breaks_tb,
         #var_pvalue = lm01_lm01_pvalue_slope,
         var_pvalue = {{var_pvalue_slope}},
-        polygons_sf = polygons_sf
+        polygons_sf = polygons_sf,
+        leg = leg
+      )
+    )
+  return(p)
+}
+
+
+
+#' Get a histogram of p.values of the lm01 models
+#'
+#' @description
+#' Util function. Get a `ggplot2` object using the column `var_pvalue` after
+#' being categorized usign the data in `breaks_tb`.
+#'
+#' @param lm_tb a tibble with a column (`plot_data`) of `sf` objects.
+#' @param breaks_tb a tibble with the categories for the p.values.
+#' @param var_pvalue_intercept,var_pvalue_slope a columnm in `data_sf` with
+#' the p.values for the intercept and the slope.
+#'
+#' @return a `ggplot2` object.
+#'
+#' @export
+#'
+get_plot_lm01_pvalues_hist <- function(lm_tb, breaks_tb, var_pvalue_intercept,
+                                       var_pvalue_slope){
+  plot_data <- NULL
+  p <-
+    lm_tb |>
+    dplyr::mutate(
+      plot_lm01_pvalue_intercept_hist = purrr::map(
+        .x = plot_data,
+        .f = get_plot_lm_pvalues_hist,
+        breaks_tb = breaks_tb,
+        #var_pvalue = lm01_lm01_pvalue_intercept #TODO: remove this line!
+        var_pvalue = {{var_pvalue_intercept}}
+      ),
+      plot_lm01_pvalue_slope_hist = purrr::map(
+        .x = plot_data,
+        .f = get_plot_lm_pvalues_hist,
+        breaks_tb = breaks_tb,
+        #var_pvalue = lm01_lm01_pvalue_slope #TODO: remove this line!
+        var_pvalue = {{var_pvalue_slope}}
       )
     )
   return(p)
