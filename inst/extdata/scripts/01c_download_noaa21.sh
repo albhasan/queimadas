@@ -14,7 +14,7 @@
 # 2025-01-01 2025-12-31 855256 jpss2-viirs-c2
 # 2026-01-01 2026-11-23 855257 jpss2-viirs-c2 #NOTE: This year is incomplete!
 
-OUT21="/home/alber/Documents/data/VIIRS_NOAA_21"
+OUT21="/home/alber/Documents/data/r_packages/queimadas/VIIRS_NOAA_21"
 wget -P $OUT21 https://firms.modaps.eosdis.nasa.gov/data/download/DL_FIRE_J2V-C2_855252.zip
 wget -P $OUT21 https://firms.modaps.eosdis.nasa.gov/data/download/DL_FIRE_J2V-C2_855255.zip
 wget -P $OUT21 https://firms.modaps.eosdis.nasa.gov/data/download/DL_FIRE_J2V-C2_855256.zip
