@@ -9,7 +9,7 @@
 # VIIRS_NOAA_20
 # Data requests.
 # start      end        id
-# 2018-04-01 2018-12-31 855225 jpss1-viirs-c2
+# 2018-04-01 2018-12-31 855225 jpss1-viirs-c2 #NOTE: This year is incomplete!
 # 2019-01-01 2019-12-31 855227 jpss1-viirs-c2
 # 2020-01-01 2020-12-31 855230 jpss1-viirs-c2
 # 2021-01-01 2021-12-31 855232 jpss1-viirs-c2
@@ -17,7 +17,7 @@
 # 2023-01-01 2023-12-31 855234 jpss1-viirs-c2
 # 2024-01-01 2024-12-31 855235 jpss1-viirs-c2
 # 2025-01-01 2025-12-31 855236 jpss1-viirs-c2
-# 2026-01-01 2026-11-23 855238 jpss1-viirs-c2
+# 2026-01-01 2026-11-23 855238 jpss1-viirs-c2 #NOTE: This year is incomplete!
 
 OUT20="/home/alber/Documents/data/r_packages/queimadas/VIIRS_NOAA_20"
 wget -P $OUT20 https://firms.modaps.eosdis.nasa.gov/data/download/DL_FIRE_J1V-C2_855225.zip
