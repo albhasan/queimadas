@@ -18,7 +18,7 @@ out_dir <- "/home/alber/Documents/data/r_packages/queimadas"
 stopifnot("Output directory not found!" = dir.exists(out_dir))
 tmp_dir <- tempdir()
 zip_dir <- file.path(tmp_dir, "zip_dir")
-csv_dir <- file.path(out_dir, "csv")
+csv_dir <- file.path(out_dir, "bdqueimadas", csv")
 sqlite_file <- "/home/alber/Documents/data/r_packages/queimadas/fire.sqlite"
 table_name <- "fire_foci"
 # NOTE: Storing data_pas as character instead of date eases posterior analysis.
