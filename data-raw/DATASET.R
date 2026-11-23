@@ -2,9 +2,11 @@ library(dplyr)
 library(geobr)
 library(sf)
 
+geobr_year <- 2025
+
 brstate_sf <-
   geobr::read_state(
-    year = 2025,
+    year = geobr_year,
     simplified = TRUE,
     output = "sf",
     showProgress = FALSE,
@@ -23,6 +25,12 @@ brstate_tb <-
   brstate_sf |>
   sf::st_drop_geometry()
 
+biomes_sf <-
+  geobr::read_biomes(
+    year = geobr_year,
+    simplified = TRUE
+  )
+
 grid_gpk <- path.expand(
   "~/Documents/data/r_packages/queimadas/grade_tm_util.gpkg"
 )
@@ -32,7 +40,7 @@ grid_sf <-
   grid_gpk |>
   sf::read_sf()
 
-usethis::use_data(brstate_sf, brstate_tb, grid_sf, overwrite = TRUE)
+usethis::use_data(biomes_sf, brstate_sf, brstate_tb, grid_sf, overwrite = TRUE)
 
 
 

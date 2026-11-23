@@ -1,3 +1,5 @@
 test_that("get_satellites works", {
-  #TODO:
+  sat <- get_satellites()
+  expect_true(inherits(x = sat, what = "character"))
+  expect_equal(length(sat), 4)
 })

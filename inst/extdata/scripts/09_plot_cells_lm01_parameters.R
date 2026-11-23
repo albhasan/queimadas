@@ -1,5 +1,4 @@
 library(dplyr)
-library(geobr)
 library(ggplot2)
 library(purrr)
 library(sf)
@@ -8,9 +7,7 @@ library(tidyr)
 
 library(queimadas)
 
-# TODO: There are many gaps in the grid. To fill them in, try using the
-#       12-month regression parameters when there is no way to use the 1-month
-#       regression.
+
 
 #---- Configuration ----
 
@@ -65,8 +62,9 @@ grid_sf <-
   dplyr::select(path_row)
 
 # Use additional data to crop the grid to fit Brazil.
-biomes_sf <- geobr::read_biomes(year = 2025, simplified = TRUE)
-biomes_sf <- sf::st_transform(biomes_sf, crs = sf::st_crs(grid_sf))
+biomes_sf <-
+  queimadas::biomes_sf |>
+  sf::st_transform(crs = sf::st_crs(grid_sf))
 
 # Get the grid's path & rows covering Brazil.
 path_row_br <-
@@ -98,6 +96,15 @@ data_tb <-
     )
   ) |>
   tidyr::unnest(data_tb)
+
+
+#TODO: Remove if clause!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# rsquared_tb_rds <- "/home/alber/Downloads/rsquared_tb.RDS" #TODO: Remove!!!!! 
+# if (file.exists(rsquared_tb_rds)) { # TODO: remove
+#   warning("rsquared tibble was already proccessed. Loading old file...") #TODO: Remove!!!!!
+#   readRDS(rsquared_tb_rds)  #TODO: Remove!!!!!
+# } else {   #TODO: Remove!!!!!
+
 
 # Process the lm12 r-squared data.
 rsquared_lm12_tb <-
@@ -303,7 +310,7 @@ rsquared_tb <-
     ),
     path_plot_lm12_pvalue_intercept_hist = purrr::pmap_chr(
       .l = list(plot_lm12_pvalue_intercept_hist, satelite_x, satelite_y),
-      .f = save_plot_lm12_pvalue_intercept_grid,
+      .f = save_plot_lm12_pvalue_intercept_hist,
       plot_size = plot_size_a5_ls,
       out_dir = out_dir_figures
     ),
@@ -392,4 +399,42 @@ export_lm01_rsquared_tb <-
   readr::write_csv(
     file = file.path(out_dir_tables, "lm01_rsquared_tb.csv"),
     progress = FALSE
+  )
+
+
+
+#   saveRDS(object = rsquared_tb, file = rsquared_tb_rds)  #TODO: Remove!!!!!
+# } #TODO: Remove!!!!! - This closes the if loop of rsquared_tb_rds
+
+fit_tb <-
+  data_tb |>
+  dplyr::select(
+      satelite_x, satelite_y, path_row,
+      x_df, y_df,
+      overlap_ts,
+      forecast_12_df, forecast_01_df
+  )|>
+  tidyr::nest(
+    .by = tidyselect::all_of(c("satelite_x", "satelite_y")),
+    .key = "forecast_tb"
+  ) |>
+  # Get the data and the plots for the lm12 and lm01 forecast.
+  dplyr::mutate(
+    plot_tb = purrr::map(
+      .x = forecast_tb,
+      .f = get_plot_forecast
+    )
+  ) |>
+  # Save the plots and the data!
+  dplyr::mutate(
+    plot_data_files = purrr::pmap(
+      .l = list(satelite_x, satelite_y, plot_tb),
+      .f = save_forecast_data,
+      out_dir_tables = out_dir_tables
+    ),
+    plot_ts_files = purrr::pmap(
+      .l = list(satelite_x, satelite_y, plot_tb),
+      .f = save_forecast_plot,
+      out_dir_figures = out_dir_figures
+    )
   )

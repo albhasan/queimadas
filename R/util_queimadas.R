@@ -280,3 +280,29 @@ get_queimadas_web_table_latex <- function(data_tb, tab_label, caption) {
 
   return(res)
 }
+
+
+
+#' Get the path and row in the file name
+#'
+#' @description
+#' Given a file path, return the path and row embedded in it.
+#'
+#' @param file_path a character(1). A path to a file (e.g.
+#' "active-fires_233_067.RDS").
+#'
+#' @return a character(1). The path and row in the file name (e.g. "233_067").
+#'
+#' @export
+#'
+get_file_path_row <- function(file_path) {
+  pr <-
+    file_path |>
+    basename() |>
+    tools::file_path_sans_ext() |>
+    stringr::str_match(
+      pattern = "[0-9]{3}_[0-9]{3}"
+    ) |>
+    as.character()
+  return(pr)
+}

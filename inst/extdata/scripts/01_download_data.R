@@ -88,7 +88,7 @@ if (length(zip_files) != length(csv_files)) {
 
 # NOTE: To connect is to create the database file!
 db_con <- DBI::dbConnect(RSQLite::SQLite(), dbname = sqlite_file)
-load_database(
+load_to_database(
   db_con = db_con,
   file_paths = csv_files,
   c_types = c_types,

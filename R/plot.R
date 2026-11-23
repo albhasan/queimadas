@@ -279,7 +279,7 @@ test_normal_residuals <- function(train_tb) {
 #'
 #' @param x_df a data frame. The data on which `y` would be estimated.
 #' @param y_df a data frame. The data used to fit a linear model on the
-#' temporal overlaping with `x_df`
+#' temporal overlaping with `x_df`.
 #' @param forecast_df a data frame. The results of projecting y for the time
 #' extent of x.
 #'

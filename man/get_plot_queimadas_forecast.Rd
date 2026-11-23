@@ -10,7 +10,7 @@ get_plot_queimadas_forecast(x_df, y_df, forecast_df)
 \item{x_df}{a data frame. The data on which \code{y} would be estimated.}
 
 \item{y_df}{a data frame. The data used to fit a linear model on the
-temporal overlaping with \code{x_df}}
+temporal overlaping with \code{x_df}.}
 
 \item{forecast_df}{a data frame. The results of projecting y for the time
 extent of x.}

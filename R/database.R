@@ -14,11 +14,11 @@
 #'
 #' @export
 #'
-load_database <- function(db_con,
-                          file_paths,
-                          c_types = "ddTcccccdnncd",
-                          table_name = "fire_foci",
-                          disconnect = TRUE) {
+load_to_database <- function(db_con,
+                             file_paths,
+                             c_types = "ddTcccccdnncd",
+                             table_name = "fire_foci",
+                             disconnect = TRUE) {
 
   stopifnot(
     "All files must have the same extension!" =

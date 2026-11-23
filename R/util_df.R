@@ -32,3 +32,24 @@ lnames2df <- function(df_ls, cname) {
 
   return(res)
 }
+
+
+
+#' Check a data frame has data
+#'
+#' @description
+#' Utilitary function. Return true if the given data frame is not NA.
+#'
+#' @param plot_lm01_data a data frame or NA.
+#'
+#' @return a logical(1). FALSE if the given parameter is actually an NA. TRUE
+#' otherwise.
+#'
+#' @export
+#'
+has_df_data <- function(plot_lm01_data) {
+  if (length(plot_lm01_data) == 1 && is.na(plot_lm01_data)) {
+    return(FALSE)
+  }
+  return(TRUE)
+}

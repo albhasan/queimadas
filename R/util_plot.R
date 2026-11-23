@@ -526,3 +526,362 @@ save_plot_lm01_pvalue_slope_grid_util <- function(plot_lm01_pvalue_slope,
   return(new_file)
 }
 
+
+
+#' Prepare data for forecast plot
+#'
+#' @description
+#' Utilitary function. Given tibbles for the observations and their forecast,
+#' prepare a table on which the original observations are preserved and the
+#' empty ones are filled with forecasted values.
+#'
+#' @param x_df,y_df a data frame with observations.
+#' @param forecast_df a data frame with the results of fitting a linear
+#' model `y ~ x` and use it to forecast the x values.
+#'
+#' @return a tibble with the x & y observations with additional columns
+#' (prefixed with `ts`).
+#'
+#' @export
+#'
+build_plot_data_ts <- function(x_df, y_df, forecast_df) {
+  period <- n.x <- n.y <- fit <- lwr <- upr <- y <- NULL
+  stopifnot("Data mismatch!" = nrow(x_df) == nrow(forecast_df))
+  plot_data_tb <-
+    tibble::tibble(
+      period  = sort(unique(c(x_df[["period"]], y_df[["period"]])))
+    ) |>
+    dplyr::left_join(
+      y = dplyr::bind_cols(x_df, forecast_df),
+      by = dplyr::join_by(period)
+    ) |>
+    dplyr::left_join(
+      y = y_df ,
+      by = dplyr::join_by(period)
+    ) |>
+    dplyr::select(period, x = n.x, y = n.y, fit, lwr, upr) |> 
+    dplyr::mutate(
+      ts_value = dplyr::if_else(
+        condition = is.na(y),
+        # Avoid negative predictions.
+        true = pmax(0, fit, na.rm = TRUE),
+        false = y
+      )
+    ) |>
+    dplyr::mutate(
+      ts_type = dplyr::if_else(
+        condition = is.na(y),
+        true = "Forecasted",
+        false = "Observed"
+      )
+    ) |>
+    dplyr::mutate(
+      ts_lwr = dplyr::if_else(
+        condition = is.na(y),
+        # Avoid negative confidence intervals.
+        # NOTE: pmax is the vectorized version of max.
+        true = pmax(0, lwr, na.rm = TRUE),
+        false = y
+      )
+    ) |>
+    dplyr::mutate(
+      ts_upr = dplyr::if_else(
+        condition = is.na(y),
+        # Avoid negative confidence intervals.
+        # NOTE: pmax is the vectorized version of max.
+        true = pmax(0, upr, na.rm = TRUE),
+        false = y
+      )
+    )
+  return(plot_data_tb)
+}
+
+
+
+#' Get a time series plot
+#'
+#' @description
+#' Use the given data to produce a plot of both observations
+#' and forecasted values, including confidence intervals.
+#'
+#' @param plot_data a tibble.
+#'
+#' @return a `ggplot2` object.
+#'
+#' @export
+#'
+get_plot_forecast_ts <- function(plot_data) {
+  period <- period_date <- ts_lwr <- ts_upr <- ts_value <- ts_type <- NULL
+  if(length(plot_data) == 1 && is.na(plot_data)) {
+    return(NA)
+  }
+  p <-
+    plot_data |>
+    dplyr::mutate(
+      period_date = period_to_date(period)
+    ) |>
+    ggplot2::ggplot() +
+    ggplot2::geom_ribbon(
+      mapping = ggplot2::aes(
+        x = period_date,
+        ymin = ts_lwr,
+        ymax = ts_upr,
+      ),
+      fill = "gray80"
+    ) +
+    ggplot2::geom_line(
+      mapping = ggplot2::aes(
+        x = period_date,
+        y = ts_value
+      )
+    ) +
+    ggplot2::geom_point(
+      mapping = ggplot2::aes(
+        x = period_date,
+        y = ts_value,
+        color = ts_type,
+        shape = ts_type
+      ),
+      size = 2
+    ) +
+    ggplot2::labs(
+      x = "Time",
+      y = "Active fires"
+    )
+  return(p)
+}
+
+
+
+#' Prepare data for forecast plot
+#'
+#' @description
+#' Utilitary function. Given tibbles for the observations and their forecast,
+#' prepare a table on which the original observations are preserved and the
+#' empty ones are filled with forecasted values.
+#'
+#' @param x_df,y_df a data frame with observations.
+#' @param forecast_01_df a data frame with the results of fitting a linear
+#' model `y ~ x` and use it to forecast the x values.
+#'
+#' @return a tibble with the x & y observations with additional columns
+#' (prefixed with `ts`), or NA.
+#'
+#' @export
+#'
+build_lm01_plot_data_ts <- function(x_df, y_df, forecast_01_df) {
+  fit <- lwr <- upr <- NULL
+  if(length(forecast_01_df) == 1 && is.na(forecast_01_df)) {
+    return(NA)
+  }
+  return(
+    build_plot_data_ts(
+      x_df = x_df,
+      y_df = y_df,
+      #TODO: Make the columns in forecast_01_df & forecast_12_df match!
+      #      Go where they were created and ensure they have the same columns.
+      #      Then come back here, remove this function, and refactor.
+      forecast_df = dplyr::select(forecast_01_df, fit, lwr, upr)
+    )
+  )
+}
+
+
+
+#' Get a time series plot
+#'
+#' @description
+#' Build time series data and plots for given the data in the input tibble.
+#'
+#' @param forecast_tb  a tibble.
+#'
+#' @return a tibble;`forecast_tb` with additional columns.
+#'
+#' @export
+#'
+get_plot_forecast <- function(forecast_tb) {
+  forecast_12_df <- plot_data <- x_df <- y_df <- NULL
+  plot_lm12_data <- forecast_01_df <- plot_lm01_data <- NULL
+  res <-
+    forecast_tb |>
+    dplyr::mutate(
+      plot_lm12_data = purrr::pmap(
+        .l = list(x_df, y_df, forecast_12_df),
+        .f = build_plot_data_ts
+      ),
+       plot_lm12_ts = purrr::map(
+        .x = plot_lm12_data,
+        .f = get_plot_forecast_ts
+      ),
+      plot_lm01_data = purrr::pmap(
+        .l = list(x_df, y_df, forecast_01_df),
+        .f = build_lm01_plot_data_ts
+      ),
+      plot_lm01_ts = purrr::map(
+       .x = plot_lm01_data,
+       .f = get_plot_forecast_ts
+      )
+    )
+  return(res)
+}
+
+
+
+#' Save the forecast data
+#'
+#' @description
+#' Write to disc the forecast data used created the plots.
+#'
+#' @param satelite_x,satelite_y a character(1). Names of the observation
+#' satelites used for the regression `y ~ x`.
+#' @param plot_tb a tibble with the forecast data and plots. 
+#' @param out_dir_tables a character(1). Path to a directory.
+#'
+#' @return a tibble with path to the created files (2 columns, one for each
+#' forecast from the yearly and monthly models).
+#'
+#' @export
+#'
+save_forecast_data <- function(satelite_x, satelite_y, plot_tb,
+                               out_dir_tables) {
+  path_row <- overlap_ts <- plot_lm12_data <- plot_lm01_data <- has_data <- NULL
+
+  lm12_ts <-
+    plot_tb |>
+    dplyr::select(path_row, overlap_ts, plot_lm12_data) |>
+    tidyr::unnest(plot_lm12_data)
+
+  lm01_ts <-
+    plot_tb |>
+    dplyr::select(path_row, overlap_ts, plot_lm01_data) |>
+    dplyr::mutate(
+      has_data = purrr::map_lgl(
+        .x = plot_lm01_data,
+        .f = has_df_data
+      )
+    ) |>
+    dplyr::filter(has_data == TRUE) |>
+    dplyr::select(-has_data) |>
+    tidyr::unnest(plot_lm01_data)
+
+  # Write to disc as CSVs lm12_ts and lm01_ts
+  forecast_lm12_ts_file <- get_plot_fname(
+    out_dir = out_dir_tables,
+    sat_x = satelite_x,
+    sat_sep = "_xy_",
+    sat_y = satelite_y,
+    suffix = "forecast_lm12_ts.csv"
+  )
+  readr::write_csv(
+    x = lm12_ts,
+    file = forecast_lm12_ts_file
+  )
+  forecast_lm01_ts_file <- get_plot_fname(
+    out_dir = out_dir_tables,
+    sat_x = satelite_x,
+    sat_sep = "_xy_",
+    sat_y = satelite_y,
+    suffix = "forecast_lm01_ts.csv"
+  )
+  readr::write_csv(
+    x = lm01_ts,
+    file = forecast_lm01_ts_file
+  )
+
+  return(
+    tibble::tibble(
+      forecast_lm12_ts_file = forecast_lm12_ts_file,
+      forecast_lm01_ts_file = forecast_lm01_ts_file 
+    )
+  )
+}
+
+
+
+#' Save the forecast data
+#'
+#' @description
+#' Write to disc the forecast data used created the plots.
+#'
+#' @param satelite_x,satelite_y a character(1). Names of the observation
+#' satelites used for the regression `y ~ x`.
+#' @param plot_tb a tibble with the forecast data and plots. 
+#' @param out_dir_figures a character(1). Path to a directory.
+#'
+#' @return a data frame with the path row, the plot, and the file path to the
+#' plot file for both lm12 and lm01 plots.
+#'
+#' @export
+#'
+save_forecast_plot <- function(satelite_x, satelite_y, plot_tb,
+                               out_dir_figures) {
+  path_row <- plot_lm12_ts <- plot_lm01_ts <- has_plot <- plot_lm12_ts <- NULL
+
+  lm12_plot <-
+    plot_tb |>
+    dplyr::select(path_row, plot_lm12_ts) |>
+    dplyr::mutate(
+      file_plot_lm12_ts = purrr::pmap_chr(
+        .l = list(path_row, plot_lm12_ts, satelite_x, satelite_y,
+            out_dir_figures),
+        .f = function(path_row, plot_lm12_ts, satelite_x, satelite_y,
+                      out_dir_figures) {
+          forecast_lm12_plot_file <- get_plot_fname(
+            out_dir = out_dir_figures,
+            sat_x = satelite_x,
+            sat_sep = "_xy_",
+            sat_y = satelite_y,
+            suffix = paste0("forecast_lm12_", path_row, "_plot.png")
+          )
+          ggplot2::ggsave(
+            filename = forecast_lm12_plot_file,
+            plot = plot_lm12_ts
+          )
+          return(forecast_lm12_plot_file)
+        }
+      )
+    )
+
+  lm01_plot <-
+    plot_tb |>
+    dplyr::select(path_row, plot_lm01_ts) |>
+    dplyr::mutate(
+      has_plot = purrr::map_lgl(
+        .x = plot_lm01_ts,
+        .f = inherits,
+        what = "ggplot2"
+      )
+    ) |>
+    dplyr::filter(has_plot == TRUE) |>
+    dplyr::select(-has_plot) |>
+    dplyr::mutate(
+      file_plot_lm01_ts = purrr::pmap_chr(
+        .l = list(path_row, plot_lm01_ts, satelite_x, satelite_y,
+            out_dir_figures),
+        .f = function(path_row, plot_lm01_ts, satelite_x, satelite_y,
+                      out_dir_figures) {
+          forecast_lm12_plot_file <- get_plot_fname(
+            out_dir = out_dir_figures,
+            sat_x = satelite_x,
+            sat_sep = "_xy_",
+            sat_y = satelite_y,
+            suffix = paste0("forecast_lm12_", path_row, "_plot.png")
+          )
+          ggplot2::ggsave(
+            filename = forecast_lm12_plot_file,
+            plot = plot_lm12_ts
+          )
+          return(forecast_lm12_plot_file)
+        }
+      )
+    )
+
+  res <-
+    dplyr::left_join(
+      x = lm12_plot,
+      y = lm01_plot,
+      by = dplyr::join_by(path_row)
+    )
+
+  return(res)
+}
