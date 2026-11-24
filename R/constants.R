@@ -12,6 +12,8 @@ get_satellites <- function() {
   sat_char <- c(
     "AQUA_M-T",
     "NOAA-12",
+    "NOAA-20",
+    "NOAA-21",
     "NPP-375-PM",
     "NPP-375D"
   )

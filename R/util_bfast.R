@@ -11,7 +11,7 @@
 #'
 #' @export
 #'
-convert_to_ts <- function(data_tb, n_freq = 12) {
+convert_to_ts <- function(data_tb, n_freq) {
   stopifnot(all(c("ymd", "n") %in% colnames(data_tb)))
 
   # NOTE: BFast demands data with at least two cycles

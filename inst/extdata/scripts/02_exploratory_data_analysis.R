@@ -22,19 +22,22 @@ logger::log_info("Reading configuration...")
 sqlite_file <- "~/Documents/data/r_packages/queimadas/fire.sqlite"
 
 table_name <- "fire_foci"
-out_dir <- "/home/alber/Documents/github/slides/queimadas/slides/figures"
+out_dir <- "/home/alber/Documents/github/slides/queimadas/slides/figures_R/s01"
 
 stopifnot("Database file not found!" = file.exists(sqlite_file))
 stopifnot("Directory not found!" = dir.exists(out_dir))
 
 ref_satellite <- c(
-  previous = "NOAA-12",
   current = "AQUA_M-T",
-  candidate = "NPP-375-M",
-  candidate = "NPP-375-T",
   candidate = "NPP-375-PM",
-  candidate = "NPP-375",
-  candidate = "NPP-375D"
+  candidate = "NPP-375D",
+  candidate = "NOAA-20",
+  candidate = "NOAA-21"
+)
+
+stopifnot(
+  "There is a missmatch in the list of reference satellites!" = 
+  all(ref_satellite %in% get_satellites())
 )
 
 plot_size_a5_ls <- queimadas::get_paper_size(name = "A5", orientation = "ls")
@@ -177,11 +180,12 @@ plot_lm_brazil_month <-
   ggplot2::theme(
     axis.text.x = element_text(angle = 90),
     axis.title.x = element_blank(),
-    axis.title.y = element_blank()
+    axis.title.y = element_blank(),
+    legend.title = element_blank()
   )
 
 ggplot2::ggsave(
-  filename = file.path(out_dir, "plot_lm_brazil_month.png"),
+  filename = file.path(out_dir, "figures", "plot_lm_brazil_month.png"),
   plot = plot_lm_brazil_month,
   width = plot_size_a5_ls[["width"]],
   height = plot_size_a5_ls[["height"]],
@@ -231,7 +235,7 @@ plot_cor_brazil_month <-
   )
 
 ggplot2::ggsave(
-  filename = file.path(out_dir, "plot_cor_brazil_month.png"),
+  filename = file.path(out_dir, "figures", "plot_cor_brazil_month.png"),
   plot = plot_cor_brazil_month,
   width = plot_size_a5_ls[["width"]],
   height = plot_size_a5_ls[["height"]],
@@ -277,11 +281,12 @@ ref_satellite |>
   get_latex_char() |>
   readr::write_csv(
     file = file.path(
-      dirname(out_dir),
+      out_dir,
       "tables",
       "correlation_overlapping_ts.csv"
     )
   )
+
 
 
 #---- Line plot ----
@@ -334,7 +339,7 @@ plot_line_brazil_year_month <-
   )
 
 ggplot2::ggsave(
-  filename = file.path(out_dir, "plot_line_brazil_year_month.png"),
+  filename = file.path(out_dir, "figures", "plot_line_brazil_year_month.png"),
   plot = plot_line_brazil_year_month,
   width = plot_size_a5_ls[["width"]],
   height = plot_size_a5_ls[["height"]],
@@ -406,10 +411,11 @@ plot_line_brazil_year_month_facet <-
   ggplot2::facet_wrap(
     facets = vars(satelite),
     scales = "free"
-  )
+  ) +
+  ggplot2::theme(legend.position="none")
 
 ggplot2::ggsave(
-  filename = file.path(out_dir, "plot_line_brazil_year_month_facet.png"),
+  filename = file.path(out_dir, "figures", "plot_line_brazil_year_month_facet.png"),
   plot = plot_line_brazil_year_month_facet,
   width = plot_size_a5_ls[["width"]],
   height = plot_size_a5_ls[["height"]],
@@ -432,7 +438,8 @@ brazil_state_ym_tb <-
   db_con |>
   get_brazil(table_name = table_name) |>
   dplyr::select(data_pas, satelite, estado) |>
-  dplyr::filter(satelite %in% ref_satellite) |>
+  #NOTE: "NPP-375-PM" is missing here, so we addded "NPP-375" by hand.
+  dplyr::filter(satelite %in% c(ref_satellite, "NPP-375")) |>
   dplyr::mutate(
     period = stringr::str_sub(string = data_pas, start = 1L, end = 7L)
   ) |>
@@ -485,9 +492,10 @@ plot_line_brazil_state_year_month <-
   )) +
   ggplot2::scale_x_discrete(breaks = break_lines) +
   ggplot2::theme(
-    axis.text.x = element_text(angle = 90),
-    axis.title.x = element_blank(),
-    axis.title.y = element_blank()
+    axis.text.x =  ggplot2::element_text(angle = 90),
+    axis.title.x = ggplot2::element_blank(),
+    axis.title.y = ggplot2::element_blank(),
+    legend.title = ggplot2::element_blank()
   ) +
   ggplot2::facet_wrap(
     facets = dplyr::vars(region),
@@ -496,12 +504,13 @@ plot_line_brazil_state_year_month <-
   )
 
 ggplot2::ggsave(
-  filename = file.path(out_dir, "plot_line_brazil_region_year_month.png"),
+  filename = file.path(out_dir, "figures", "plot_line_brazil_region_year_month.png"),
   plot = plot_line_brazil_state_year_month,
   width = plot_size_a4_ls[["height"]],
   height = plot_size_a4_ls[["width"]],
   units = plot_size_a4_ls[["units"]]
 )
+
 
 
 #---- BFast analysis ----
@@ -520,7 +529,8 @@ bfast_tb <-
   dplyr::mutate(
     ts = purrr::map(
       .x = data,
-      .f = convert_to_ts
+      .f = convert_to_ts,
+      n_freq = 12
     )
   ) |>
   dplyr::mutate(
@@ -535,9 +545,8 @@ bfast_tb <-
       .x = bf,
       .y = data,
       .f = function(bf, data) {
-        if (is.na(bf[["Time"]])) {
-          return(NA)
-        }
+        if (length(bf) == 1 && is.na(bf)) { return(NA) }
+        if (is.na(bf[["Time"]])) { return(NA) }
         return(data[bf[["Time"]], ][["ymd"]])
       }
     )
@@ -550,6 +559,7 @@ for (i in seq_len(nrow(bfast_tb))) {
   sat_name <- bfast_tb[["satelite"]][[i]]
   filename <- file.path(
     out_dir,
+    "figures",
     paste0("plot_bfast_brazil_year_month_", sat_name, ".png")
   )
   bf_obj <- bfast_tb[["bf"]][[i]]
@@ -648,19 +658,21 @@ bfast_aqua_plot <-
 
 bfast_noaa_plot <-
   get_plot_ts_with_bfast_break(
-    bfast_ts_tb = dplyr::filter(bfast_ts_tb, satelite == "NOAA-12"),
-    bfast_top_tb = dplyr::filter(bfast_top_tb, satelite == "NOAA-12"),
+    bfast_ts_tb = dplyr::filter(bfast_ts_tb, satelite == "NOAA-20"),
+    bfast_top_tb = dplyr::filter(bfast_top_tb, satelite == "NOAA-20"),
     break_lines = break_lines
   )
 
 filename_aqua <- file.path(
   out_dir,
+  "figures",
   paste0("plot_bfast_split_brazil_year_month_", "AQUA_M-T", ".png")
 )
 
 filename_noaa <- file.path(
   out_dir,
-  paste0("plot_bfast_split_brazil_year_month_", "NOAA-12", ".png")
+  "figures",
+  paste0("plot_bfast_split_brazil_year_month_", "NOAA-20", ".png")
 )
 
 logger::log_info(sprintf("Saving plot to file %s...", basename(filename_aqua)))

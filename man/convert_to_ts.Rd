@@ -4,7 +4,7 @@
 \alias{convert_to_ts}
 \title{Convert to time series}
 \usage{
-convert_to_ts(data_tb, n_freq = 12)
+convert_to_ts(data_tb, n_freq)
 }
 \arguments{
 \item{data_tb}{a tibble::tibble object.}
