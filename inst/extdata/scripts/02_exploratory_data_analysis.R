@@ -1,5 +1,6 @@
 library(bfast)
 library(dplyr)
+library(ggcorrplot)
 library(ggplot2)
 library(logger)
 library(lubridate)
@@ -22,7 +23,7 @@ logger::log_info("Reading configuration...")
 sqlite_file <- "~/Documents/data/r_packages/queimadas/fire.sqlite"
 
 table_name <- "fire_foci"
-out_dir <- "/home/alber/Documents/github/slides/queimadas/slides/figures_R/s01"
+out_dir <- "/home/alber/Documents/github/slides/queimadas/slides/figures_R/s02"
 
 stopifnot("Database file not found!" = file.exists(sqlite_file))
 stopifnot("Directory not found!" = dir.exists(out_dir))
