@@ -6,6 +6,9 @@
 # alber.ipia@inpe.br
 ###############################################################################
 
+echo "DEPRECATED: This is no longer neccessary. The data is alredy present in the data base."
+exit 1
+
 # VIIRS_NOAA_21
 # Data requests.
 # start      end        id     datasource
