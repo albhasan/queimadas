@@ -8,7 +8,7 @@ library(queimadas)
 
 logger::log_threshold(INFO)
 
-logger::log_info("Script 01_download_data starting...")
+logger::log_info("Script 01a_download_bdqueimadas starting...")
 
 out_dir <- "/home/alber/Documents/data/r_packages/queimadas"
 stopifnot("Output directory not found!" = dir.exists(out_dir))
