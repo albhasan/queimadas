@@ -25,6 +25,8 @@ get_plot_forecast_vs_obs <- function(obs_tb, forecast_tb) {
   fc_tb <-
     forecast_tb |>
     dplyr::filter(
+      #TODO: Check warning related to inconsistent tzones attributes.
+      #      check_tzones() ! 'tzone' attributes are inconsistent
       ds >= min(obs_tb[["ds"]]),
       ds <= max(obs_tb[["ds"]])
     )

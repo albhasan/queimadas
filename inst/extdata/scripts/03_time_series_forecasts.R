@@ -18,16 +18,15 @@ logger::log_info("Reading configuration...")
 
 sqlite_file <- "~/Documents/data/r_packages/queimadas/fire.sqlite"
 table_name <- "fire_foci"
-out_dir <- "/home/alber/Documents/github/slides/queimadas/slides/figures"
+out_dir <- "/home/alber/Documents/github/slides/queimadas/slides/figures_R/s03"
 
 ref_satellite <- c(
   previous = "NOAA-12",
   current = "AQUA_M-T",
-  candidate = "NPP-375-M",
-  candidate = "NPP-375-T",
   candidate = "NPP-375-PM",
-  candidate = "NPP-375",
-  candidate = "NPP-375D"
+  candidate = "NPP-375D",
+  candidate = "NOAA-20",
+  candidate = "NOAA-21"
 )
 
 stopifnot("Database file not found!" = file.exists(sqlite_file))
@@ -106,7 +105,11 @@ for (x in satellite_tb[["data"]]) {
   for (p_name in names(plot_ls)) {
     print(plot_ls[[p_name]])
     ggplot2::ggsave(
-      filename = file.path(out_dir, paste0(p_name, "_", x_satellite, ".png")),
+      filename = file.path(
+        out_dir,
+        "figures",
+        paste0(p_name, "_", x_satellite, ".png")
+      ),
       plot = plot_ls[[p_name]],
       width = plot_size_a5_ls[["width"]],
       height = plot_size_a5_ls[["height"]],
@@ -125,7 +128,11 @@ for (x in satellite_tb[["data"]]) {
   plot_ls <- component_analysis(train_tb = x)
   for (p_name in names(plot_ls)) {
     ggplot2::ggsave(
-      filename = file.path(out_dir, paste0(p_name, "_", x_satellite, ".png")),
+      filename = file.path(
+        out_dir,
+        "figures",
+        paste0(p_name, "_", x_satellite, ".png")
+      ),
       plot = plot_ls[[p_name]],
       width = plot_size_a5_ls[["width"]],
       height = plot_size_a5_ls[["height"]],
@@ -143,8 +150,15 @@ for (x in satellite_tb[["data"]]) {
   plot_ls <- test_normal_residuals(train_tb = x)
   x_satellite <- paste(unique(x[["satelite"]]), collapse = "-")
   for (p_name in names(plot_ls)) {
+    plot_res_file <-
+      file.path(
+        out_dir,
+        "figures", 
+        paste0(p_name, "_", x_satellite, ".png")
+      )
+    logger::log_info("Writing residual plot ", plot_res_file)
     ggplot2::ggsave(
-      filename = file.path(out_dir, paste0(p_name, "_", x_satellite, ".png")),
+      filename = plot_res_file,
       plot = plot_ls[[p_name]],
       width = plot_size_a5_ls[["width"]],
       height = plot_size_a5_ls[["height"]],
@@ -175,14 +189,15 @@ for (x in satellite_tb[["data"]]) {
       x = "Time",
       y = "Number of events"
     )
-
-  plot_file <- file.path(
+  plot_atc_file <-
+    file.path(
       out_dir,
+      "figures",
       paste0("plot_autocorrelation", "_", x_satellite, ".png")
     )
-  logger::log_info("Saving autocorrelation plot to: ", plot_file)
+  logger::log_info("Saving autocorrelation plot to: ", plot_atc_file)
   ggplot2::ggsave(
-    filename = plot_file,
+    filename = plot_atc_file,
     plot = p,
     width = plot_size_a5_ls[["width"]],
     height = plot_size_a5_ls[["height"]],
@@ -228,8 +243,11 @@ for (r in seq_len(nrow(satellite_tb))) {
       y = "Number of events"
     )
   print(p)
-  plot_file <- file.path(
-      out_dir, paste0("plot_forecast", "_", x_satellite, ".png")
+  plot_file <-
+    file.path(
+      out_dir,
+      "figures",
+      paste0("plot_forecast", "_", x_satellite, ".png")
     )
   logger::log_info("Saving forescast plot to: ", plot_file)
   ggplot2::ggsave(
@@ -248,7 +266,8 @@ logger::log_info("Comparing forecasts...")
 
 # NOTE: The best looking forecast belongs to NPP-375-PM!
 
-ref_fc <- "NPP-375-PM"
+#ref_fc <- "NPP-375-PM"
+ref_fc <- "NOAA-20"
 
 forecast_tb <-
   satellite_tb |>
@@ -277,9 +296,12 @@ plot_fc_vs_obs <-
     x = "Time",
     y = "Number of events"
   )
+
 plot_file <-
   file.path(
-    out_dir, paste0("plot_fc_", ref_fc, "_vs_obs.png")
+    out_dir,
+    "figures",
+    paste0("plot_fc_", ref_fc, "_vs_obs.png")
   )
 logger::log_info("Saving forecast-versus-observations plot to: ", plot_file)
 ggplot2::ggsave(
@@ -322,7 +344,10 @@ for (x_satellite in satellite_tb[["name"]]) {
     )
   plot_file <-
     file.path(
-    out_dir, paste0("plot_fc_", ref_fc, "_vs_obs_", x_satellite, ".png")
+      out_dir,
+      "figures",
+      paste0("plot_fc_", ref_fc, "_vs_obs_", x_satellite, ".png"
+    )
   )
   logger::log_info("Saving forecast-versus-observations plot to: ", plot_file)
   ggplot2::ggsave(
@@ -391,7 +416,9 @@ for (x_satellite in satellite_tb[["name"]]) {
     )
   plot_file <-
     file.path(
-      out_dir, paste0("plot_res_obs_", x_satellite, "_vs_fc_", ref_fc, ".png")
+      out_dir,
+      "figures",
+      paste0("plot_res_obs_", x_satellite, "_vs_fc_", ref_fc, ".png")
     )
   logger::log_info("Saving residuals-versus-forecast plot to: ", plot_file)
   ggplot2::ggsave(
