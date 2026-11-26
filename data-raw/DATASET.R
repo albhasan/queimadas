@@ -32,7 +32,7 @@ biomes_sf <-
   )
 
 grid_gpk <- path.expand(
-  "~/Documents/data/r_packages/queimadas/grade_tm_util.gpkg"
+  "~/Documents/github/queimadas/inst/extdata/data/grade_tm_util.gpkg"
 )
 stopifnot("Grid geopackage not found!" = file.exists(grid_gpk))
 

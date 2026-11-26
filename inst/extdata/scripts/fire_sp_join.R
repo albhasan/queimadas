@@ -3,10 +3,12 @@
 # JOIN SPATAILY A CSV FILE TO A SPATIAL ENTITY
 #------------------------------------------------------------------------------
 # ./fire_sp_join.R \
-# -c /home/alber/Documents/data/r_packages/queimadas/csv/focos_br_todos-sats_2019.csv \
+# -c /home/alber/Documents/data/r_packages/queimadas/bdqueimadas/csv/focos_br_todos-sats_2019.csv \
 # -g /home/alber/Documents/data/r_packages/queimadas/grade_tm_util.gpkg \
 # -o /home/alber/Documents/data/r_packages/queimadas/results/gpkg
 ###############################################################################
+
+#NOTE: Do I need to run for biomes and states? The points already got that information!
 
 suppressMessages(require(dplyr))
 suppressMessages(require(optparse))
@@ -49,7 +51,7 @@ stopifnot(
     dir.exists(dirname(out_dir))
 )
 
-# Read the shapefile.
+# Read the vector data. 
 polygons_sf <-
   gpkg_file |>
   sf::read_sf()
