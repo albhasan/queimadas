@@ -16,7 +16,8 @@ library(queimadas)
 
 sqlite_file <- "~/Documents/data/r_packages/queimadas/fire.sqlite"
 table_name <- "fire_foci"
-out_dir <- "/home/alber/Documents/github/slides/queimadas/slides"
+out_dir <- "/home/alber/Documents/github/slides/queimadas/slides/figures_R/s04"
+
 
 plot_size_a5_ls <- get_paper_size(name = "A5", orientation = "ls")
 plot_size_a4_ls <- get_paper_size(name = "A4", orientation = "ls")
