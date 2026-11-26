@@ -14,7 +14,7 @@ predict_ci_01(lm_ls, new_data, clevel)
 \item{clevel}{a numeric(1). The confidence level to use.}
 }
 \value{
-a list of data frames.
+a list of data frames or NAs.
 }
 \description{
 Use the given models to predict, including the lower and upper values at the

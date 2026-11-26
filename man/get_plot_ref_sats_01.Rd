@@ -13,7 +13,7 @@ get_plot_ref_sats_01(x, y, data_df)
 satellites.}
 }
 \value{
-A plot (ggplot2) object.
+A plot (ggplot2) object or NA.
 }
 \description{
 Get a ggplot2 plot which compares a reference satellite observations in a

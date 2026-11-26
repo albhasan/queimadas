@@ -25,8 +25,6 @@ get_plot_forecast_vs_obs <- function(obs_tb, forecast_tb) {
   fc_tb <-
     forecast_tb |>
     dplyr::filter(
-      #TODO: Check warning related to inconsistent tzones attributes.
-      #      check_tzones() ! 'tzone' attributes are inconsistent
       ds >= min(obs_tb[["ds"]]),
       ds <= max(obs_tb[["ds"]])
     )
@@ -292,6 +290,10 @@ test_normal_residuals <- function(train_tb) {
 get_plot_queimadas_forecast <- function(x_df, y_df, forecast_df) {
   fit <- lwr <- period_date <- upr <- n <- NULL
 
+  if (is_made_of_na(forecast_df)) {
+    return(NA)
+  }
+
   f_line_color <- "blue"
   f_line_type <- "solid"
   f_line_width <- 0.4
@@ -498,12 +500,33 @@ get_plot_ref_sats <- function(x, y, data_df, lm_obj, use_adj_rsqr) {
 #' @param data_df a data frame with overlapping observations of reference
 #' satellites.
 #'
-#' @return A plot (ggplot2) object.
+#' @return A plot (ggplot2) object or NA.
 #'
 #' @export
 #'
 get_plot_ref_sats_01 <- function(x, y, data_df) {
   fit <- lwr <- m <- upr <- month <- NULL
+
+  if (nrow(data_df) == 1 && ncol(data_df) > 0) {
+    #DONE: Check if these 2 blocks of code are equivalent!
+    #NOTE: Checked once, it works
+    # all_na <- 
+    #   all(vapply(
+    #     X = data_df,
+    #     FUN = function(x) {
+    #       if(length(x) == 1 && is.na(x)) {
+    #         return(TRUE)
+    #       }
+    #       return(FALSE)
+    #     },
+    #     FUN.VALUE = logical(1)
+    #   ))
+    # if (all_na) return(NA)
+    if (is_made_of_na(data_df)) {
+      return(NA)
+    }
+  }
+
   stopifnot(
     "Required columns not found!" =
       c("fit", "lwr", "m", "upr", "month") %in% colnames(data_df)

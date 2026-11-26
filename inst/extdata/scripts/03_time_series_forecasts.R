@@ -29,6 +29,11 @@ ref_satellite <- c(
   candidate = "NOAA-21"
 )
 
+stopifnot(
+  "There is a missmatch in the list of reference satellites!" = 
+  all(ref_satellite %in% get_satellites())
+)
+
 stopifnot("Database file not found!" = file.exists(sqlite_file))
 stopifnot("Directory not found!" = dir.exists(out_dir))
 

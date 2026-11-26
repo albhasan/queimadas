@@ -30,3 +30,35 @@ find_interval_name <- function(x, breaks, bnames) {
   #TODO: Should I rename this function to get_name_in_interval?
   return(bnames[findInterval(x = x, vec = breaks)])
 }
+
+
+#' Test if the object is made of NAs
+#'
+#' @description
+#' Test if the given object is either NA or a list made of NAs.
+#'
+#' @param x an atomic object or a list of them.
+#'
+#' @return a logical or a list of them.
+#'
+#' @export
+#'
+is_made_of_na <- function(x) {
+  if(is.atomic(x)) {
+    return(
+      all(is.na(x))
+    )
+  } else if (
+    inherits(x = x, what = "list") ||
+    inherits(x = x, what = "data.frame")
+  ) {
+    return(
+      all(vapply(
+        X = x,
+        FUN = is_made_of_na,
+        FUN.VALUE = logical(1)
+      ))
+    )
+  } 
+  return(FALSE)
+}

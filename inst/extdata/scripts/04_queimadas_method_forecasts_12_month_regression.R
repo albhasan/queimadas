@@ -43,22 +43,15 @@ rm(db_con)
 sat_char <- c(
   "AQUA_M-T",
   "NOAA-12",
+  "NOAA-20",
+  "NOAA-21",
   "NPP-375-PM",
   "NPP-375D"
 )
 
-# TODO: Add satellites operational lives to figures.
-# https://space.oscar.wmo.int/satellites/view/aqua
-# https://space.oscar.wmo.int/satellites/view/noaa_12
-# https://space.oscar.wmo.int/satellites/view/terra
-# https://space.oscar.wmo.int/satellites/view/snpp
-
-sat_metadata <- tibble::tribble(
-  ~name,     ~launch,      ~elo,
-  "AQUA",    "2002-05-04", ">2026",
-  "TERRA",   "1999-12-18", ">2026",
-  "NOAA-12", "1991-05-12", "2007-08-10",
-  "SNPP",    "2011-10-28", ">2029"
+stopifnot(
+  "There is a missmatch in the list of reference satellites!" = 
+  all(sat_char %in% get_satellites())
 )
 
 stopifnot(
@@ -185,18 +178,29 @@ sat_01_tb <-
       .x = lm_data_month,
       .f = function(data_ls) {
         data_tb_ls <- lapply(X = data_ls, FUN = function(a) {
+          if(length(a) == 1 && is.na(a)) {return(NA)} 
           return(a[["model"]])
         })
       }
-    ),
+    )
+  ) |>
+  dplyr::mutate(
     # Get the fitted model data in a column.
     lm_01_data = purrr::map(
       .x = lm_data_month,
-      .f = function(data_ls, data_names) {
-        data_tb_ls <- lapply(X = data_ls, FUN = function(a) {
-          data_tb <- tibble::as_tibble(a[["data"]])
-        })
-        return(dplyr::bind_rows(lnames2df(df_ls = data_tb_ls, cname = "month")))
+      #.f = function(data_ls, data_names) {
+      .f = function(data_ls) {
+        data_tb_ls <-
+          lapply(
+            X = data_ls,
+            FUN = function(a) {
+              if(length(a) == 1 && is.na(a)) {return(NA)} 
+              data_tb <- tibble::as_tibble(a[["data"]])
+            }
+          )
+        return(
+          dplyr::bind_rows(lnames2df(df_ls = data_tb_ls, cname = "month"))
+        )
       }
     )
   ) |>
@@ -267,6 +271,9 @@ sat_12_01_diff <-
       .x = forecast_12_df,
       .y = forecast_01_df,
       .f = function(forecast_12_df, forecast_01_df) {
+        if(is_made_of_na(forecast_12_df) || is_made_of_na(forecast_01_df)) {
+          return(NA)
+        }
         cnames <- c("fit", "lwr", "upr")
         res <- forecast_12_df[, cnames] - forecast_01_df[, cnames]
         per <- forecast_12_df["period"]
@@ -283,6 +290,9 @@ sat_12_01_diff <-
     plot_forecast_diff = purrr::map(
       .x = forecast_diff,
       .f = function(forecast_diff) {
+        if(is_made_of_na(forecast_diff)) {
+          return(NA)
+        }
         forecast_diff["period_date"] <- paste0(forecast_diff[["period"]], "-15")
         forecast_diff["period_date"] <- as.Date(forecast_diff[["period_date"]])
         ggplot2::ggplot(data = forecast_diff) +
@@ -347,6 +357,13 @@ for (i in seq_len(nrow(sat_01_tb))) {
     "figures",
     paste0("plot_queimadas_lm_01_", sat_y, "_along_", sat_x, ".png")
   )
+  if (is.na(p)) {
+    logger::log_info(
+      "Skipping empty plot (NA): ",
+      basename(plot_file)
+    )
+    next()
+  }
   logger::log_info(
     "Saving linear model 01 plot to file: ",
     basename(plot_file)
@@ -437,6 +454,14 @@ logger::log_info("Writting lm 01 regression forecast to CSV and TEX...")
 lm_01_forecast_tb <-
   sat_01_tb |>
   dplyr::select(satelite_x, satelite_y, forecast_01_df) |>
+  dplyr::mutate(
+    is_forecast_na = purrr::map_lgl(
+      .x = forecast_01_df,
+      .f = is_made_of_na
+    )
+  ) |>
+  dplyr::filter(is_forecast_na == FALSE) |>
+  dplyr::select(-is_forecast_na) |>
   tidyr::unnest(forecast_01_df) |>
   dplyr::select(satelite_x, satelite_y, period, n, fit, lwr, upr) |>
   # NOTE: Avoid CSV problems in LaTeX caused by underscores in column names.
@@ -450,7 +475,6 @@ lm_01_forecast_tb <-
     .f = function(x) {
       sat_x <- unique(x[["satelitex"]])
       sat_y <- unique(x[["satelitey"]])
-
       out_file <-
         file.path(
           out_dir,
@@ -459,11 +483,9 @@ lm_01_forecast_tb <-
             "queimadas_method_lm_01_forecast_x_", sat_x, "_y_", sat_y
           )
         )
-
       x <-
         x |>
         dplyr::arrange(period, satelitex, satelitey)
-
       # NOTE: Write the raw data to CSV with LaTeX's character escape.
       x |>
         janitor::clean_names() |>
@@ -471,7 +493,6 @@ lm_01_forecast_tb <-
         readr::write_csv(
           file = paste0(out_file, ".csv")
         )
-
       # NOTE: Write straight to LaTeX's table.
       x |>
         dplyr::select(period, obs, fit, lwr, upr) |>
@@ -496,10 +517,8 @@ lm_01_forecast_tb <-
         readr::write_lines(
           file = paste0(out_file, ".tex")
         )
-
       # Format the table using the Queimadas' style.
       table_tb <- get_queimadas_web_table(data_tb = x)
-
       out_file_con <- paste0(out_file, "_continuity")
       table_tb |>
         get_queimadas_web_table_latex(
@@ -709,11 +728,6 @@ for (i in seq_len(nrow(sat_tb))) {
 }
 
 # NOTE: Regression curve by region?
-# DONE: Regression by cell.
-
-# no caso do aqua voltar ate 1998
-# correlacao de pearson da regiao sul
-# comparaçao do brazil com regiao, como ficaram os residuais,
 
 # DONE: Liana olhar segmented regression analysis, modified mamn-kentall,
 # sem slope, loeless regression. I didn't do this, instead I estimated breaks

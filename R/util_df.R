@@ -7,14 +7,32 @@
 #' @param df_ls a named list of data frames.
 #' @param cname a character(1). The name for the new column.
 #'
-#' @return         A list of data frames.
+#' @return         A list of data frames or a list of NAs.
 #'
 #' @export
 #'
 lnames2df <- function(df_ls, cname) {
+
+  all_na <-
+    all(vapply(
+      X = df_ls,
+      FUN = function(x) {
+        if(length(x) == 1 && is.na(x)) {
+          return(TRUE)
+        }
+        return(FALSE)
+      },
+      FUN.VALUE = logical(1)
+    ))
+  if(all_na) {return(df_ls)}
+
   stopifnot(
     "Expected a list of data frames!" =
-      all(vapply(df_ls, is.data.frame, logical(1)))
+      all(vapply(
+        X = df_ls,
+        FUN = is.data.frame,
+        FUN.VALUE = logical(1)
+      ))
   )
   stopifnot(
     "Expected a named list!" =

@@ -269,11 +269,16 @@ get_ts_overlap <- function(x_df, y_df, cname) {
 #' @param new_data a data frame with data to predict using the given models.
 #' @param clevel a numeric(1). The confidence level to use.
 #'
-#' @return a list of data frames.
+#' @return a list of data frames or NAs.
 #'
 #' @export
 #'
 predict_ci_01 <- function(lm_ls, new_data, clevel) {
+
+  if(is_made_of_na(lm_ls)) {
+    return(lm_ls)
+  }
+
   new_data["m"] <- substr(x = new_data[["period"]], start = 6, stop = 7)
   data_ls <- split(x = new_data, f = new_data[["m"]])
   names(data_ls) <- paste0("month_", names(data_ls))

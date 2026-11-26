@@ -12,7 +12,7 @@ lnames2df(df_ls, cname)
 \item{cname}{a character(1). The name for the new column.}
 }
 \value{
-\if{html}{\out{<div class="sourceCode">}}\preformatted{    A list of data frames.
+\if{html}{\out{<div class="sourceCode">}}\preformatted{    A list of data frames or a list of NAs.
 }\if{html}{\out{</div>}}
 }
 \description{

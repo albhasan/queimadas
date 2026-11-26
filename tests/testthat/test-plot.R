@@ -19,7 +19,16 @@ test_that("test_normal_residuals works", {
 })
 
 test_that("get_plot_queimadas_forecast works", {
-  # TODO:
+  res <-
+    get_plot_queimadas_forecast(
+      x_df = NA,
+      y_df = NA, 
+      forecast_df = data.frame(c1 = NA, c2 = NA, c3 = NA)
+    )
+  expect_equal(
+    object = res,
+    expected = NA
+  )
 })
 
 test_that("get_plot_ref_sats works", {
