@@ -58,4 +58,4 @@ data_tb <-
     )
   )
 
-logger::log_info("Finishec!")
+logger::log_info("Finished!")
