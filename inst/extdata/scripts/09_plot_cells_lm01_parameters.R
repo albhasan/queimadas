@@ -18,7 +18,8 @@ grid_gpkg <-
   "/home/alber/Documents/data/r_packages/queimadas/grade_tm_util.gpkg"
 stopifnot("Grid geopackages file not found!" = file.exists(grid_gpkg))
 
-out_dir <- "/home/alber/Documents/github/slides/queimadas/slides"
+out_dir <- "/home/alber/Documents/github/slides/queimadas/slides/figures_R/s09"
+
 stopifnot("Output directory not found!" = dir.exists(out_dir))
 
 plot_size_a5_ls <- get_paper_size(name = "A5", orientation = "ls")
@@ -46,8 +47,8 @@ pvalue_breaks_tb <- tibble::tibble(
 #---- Script ----
 
 # Ensure directories  exist.
-out_dir_figures <- file.path(out_dir, "figures_R")
-out_dir_tables <- file.path(out_dir, "tables_R")
+out_dir_figures <- file.path(out_dir, "figures")
+out_dir_tables <- file.path(out_dir, "tables")
 if (dir.exists(out_dir_figures) == FALSE){
   dir.create(out_dir_figures)
 }
