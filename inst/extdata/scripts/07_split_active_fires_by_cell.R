@@ -8,7 +8,8 @@ sqlite_file <-
     "/home/alber/Documents/data/r_packages/queimadas/fire_grid.sqlite"
 table_name <- "fire_foci_grid"
 
-out_dir <- "/home/alber/Documents/results/r_packages/queimadas"
+out_dir <- "/home/alber/Documents/github/slides/queimadas/slides/figures_R/s07"
+
 
 stopifnot("Database file not found!" = file.exists(sqlite_file))
 stopifnot("Output directory not found!" = dir.exists(out_dir))
@@ -33,7 +34,14 @@ sat_char <- c(
   "AQUA_M-T",
   "NOAA-12",
   "NPP-375-PM",
-  "NPP-375D"
+  "NPP-375D",
+  "NOAA-20",
+  "NOAA-21"
+)
+
+stopifnot(
+  "There is a missmatch in the list of reference satellites!" = 
+  all(sat_char %in% get_satellites())
 )
 
 stopifnot(
