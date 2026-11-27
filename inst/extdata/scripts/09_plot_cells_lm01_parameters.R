@@ -11,7 +11,7 @@ library(queimadas)
 
 #---- Configuration ----
 
-rds_dir <- "/home/alber/Documents/results/r_packages/queimadas/cell_lm"
+rds_dir <- "/home/alber/Documents/github/slides/queimadas/slides/figures_R/s08/cell_lm"
 stopifnot("Directory with RDS files not found!" = dir.exists(rds_dir))
 
 grid_gpkg <-
