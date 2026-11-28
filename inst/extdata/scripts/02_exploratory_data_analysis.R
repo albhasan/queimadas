@@ -334,9 +334,10 @@ plot_line_brazil_year_month <-
   ) +
   ggplot2::scale_x_continuous(breaks = break_lines) +
   ggplot2::theme(
-    axis.text.x = element_text(angle = 90),
-    axis.title.x = element_blank(),
-    axis.title.y = element_blank()
+    axis.text.x =  ggplot2::element_text(angle = 90),
+    axis.title.x = ggplot2::element_blank(),
+    axis.title.y = ggplot2::element_blank(),
+    legend.title = ggplot2::element_blank()
   )
 
 ggplot2::ggsave(
