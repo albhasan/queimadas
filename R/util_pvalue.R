@@ -43,6 +43,8 @@ get_pvalues_from_lm12_params <- function(m_params, prefix) {
 #'
 #' @return a tibble.
 #'
+#' @export
+#'
 get_pvalues_from_lm01_params <- function(m_params, prefix) {
   month <- pvalue_tb <- NULL
   if (nrow(m_params) == 0) {
